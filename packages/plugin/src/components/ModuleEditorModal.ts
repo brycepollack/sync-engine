@@ -26,6 +26,8 @@ export type ModuleEditorTranslations = {
 };
 
 export default class ModuleEditorModal extends Modal {
+	private saved = false;
+
 	constructor(
 		private readonly ctx: { app: App; translate: Translate<ModuleEditorTranslations> },
 		private readonly options: {
@@ -40,7 +42,7 @@ export default class ModuleEditorModal extends Modal {
 
 	onOpen() {
 		const { translate } = this.ctx;
-		const { initial, onCancel = () => {}, onSave, getFile } = this.options;
+		const { initial, onSave, getFile } = this.options;
 		const { enabled, name, icon, description, source, integrity } = initial;
 		const updated = { ...this.options.initial };
 		let integrityEnabled = integrity !== '';
@@ -118,10 +120,7 @@ export default class ModuleEditorModal extends Modal {
 
 		new Setting(this.contentEl)
 			.addButton((button) =>
-				button.setButtonText(translate('cancel')).onClick(async () => {
-					await onCancel();
-					this.close();
-				}),
+				button.setButtonText(translate('cancel')).onClick(async () => this.close()),
 			)
 			.addButton((button) =>
 				button
@@ -134,12 +133,14 @@ export default class ModuleEditorModal extends Modal {
 								: integrity
 							: '';
 						await onSave(Object.assign(updated, { integrity: newHash }));
+						this.saved = true;
 						this.close();
 					}),
 			);
 	}
 
 	onClose() {
+		if (!this.saved) void this.options.onCancel?.();
 		this.contentEl.empty();
 	}
 }
