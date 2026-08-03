@@ -58,17 +58,17 @@ type VaultHarnessOptions = {
 
 function createVaultControl(options: VaultHarnessOptions): VaultControl {
 	return {
-		appendBinary: async () => undefined,
-		exists: async () => false,
-		list: async (path: string) => options.list?.[path] ?? { files: [], folders: [] },
-		mkdir: async () => undefined,
-		readBinary: async () => new ArrayBuffer(0),
-		remove: async () => undefined,
-		rename: async () => undefined,
-		stat: async (path: string) => options.stats?.[path],
-		trashLocal: async () => undefined,
-		trashSystem: async (path: string) => options.trashSystem?.[path] ?? true,
-		writeBinary: async () => undefined,
+		appendBinary: () => {},
+		exists: () => false,
+		list: (path: string) => options.list?.[path] ?? { files: [], folders: [] },
+		mkdir: () => {},
+		readBinary: () => new ArrayBuffer(0),
+		remove: () => {},
+		rename: () => {},
+		stat: (path: string) => options.stats?.[path],
+		trashLocal: () => {},
+		trashSystem: (path: string) => options.trashSystem?.[path] ?? true,
+		writeBinary: () => {},
 		...options.control,
 	};
 }
@@ -89,61 +89,59 @@ function createVaultStub(options: VaultHarnessOptions): VaultHarness {
 	};
 	const control = createVaultControl(options);
 	const adapter = {
-		appendBinary: async (path: string, data: ArrayBuffer) => {
+		appendBinary: (path: string, data: ArrayBuffer) => {
 			calls.appendBinary.push([path, textDecoder.decode(data)]);
-			return await control.appendBinary(path, data);
+			return control.appendBinary(path, data);
 		},
-		exists: async (path: string) => {
+		exists: (path: string) => {
 			calls.exists.push(path);
-			return await control.exists(path);
+			return control.exists(path);
 		},
-		list: async (path: string) => {
+		list: (path: string) => {
 			calls.list.push(path);
-			return await control.list(path);
+			return control.list(path);
 		},
-		mkdir: async (path: string) => {
+		mkdir: (path: string) => {
 			calls.mkdir.push(path);
-			return await control.mkdir(path);
+			return control.mkdir(path);
 		},
-		readBinary: async (path: string) => {
+		readBinary: (path: string) => {
 			calls.readBinary.push(path);
-			return await control.readBinary(path);
+			return control.readBinary(path);
 		},
-		remove: async (path: string) => {
+		remove: (path: string) => {
 			calls.remove.push(path);
-			return await control.remove(path);
+			return control.remove(path);
 		},
-		rename: async (path: string, newPath: string) => {
+		rename: (path: string, newPath: string) => {
 			calls.rename.push([path, newPath]);
-			return await control.rename(path, newPath);
+			return control.rename(path, newPath);
 		},
-		stat: async (path: string) => {
+		stat: (path: string) => {
 			calls.stat.push(path);
-			return await control.stat(path);
+			return control.stat(path);
 		},
-		trashLocal: async (path: string) => {
+		trashLocal: (path: string) => {
 			calls.trashLocal.push(path);
-			return await control.trashLocal(path);
+			return control.trashLocal(path);
 		},
-		trashSystem: async (path: string) => {
+		trashSystem: (path: string) => {
 			calls.trashSystem.push(path);
-			return await control.trashSystem(path);
+			return control.trashSystem(path);
 		},
-		writeBinary: async (path: string, data: ArrayBuffer) => {
+		writeBinary: (path: string, data: ArrayBuffer) => {
 			calls.writeBinary.push([path, textDecoder.decode(data)]);
-			return await control.writeBinary(path, data);
+			return control.writeBinary(path, data);
 		},
 	};
 
 	const app = {
-		metadataCache: {
-			inProgressTaskCount: 0,
-		},
 		vault: {
 			adapter,
 			config: options.config,
 			getAbstractFileByPath: () => {},
 		},
+		workspace: { layoutReady: true },
 	} as unknown as App;
 
 	return {

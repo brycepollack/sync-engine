@@ -31,12 +31,14 @@ export type WriteAtom = {
 	key: string;
 	execute: () => MaybePromise<string>;
 	resolve: (uid: string) => void;
+	reject: (err: Error) => void;
 };
 export type DeleteAtom = {
 	type: 'delete';
 	key: string;
 	execute: () => MaybePromise<void>;
 	resolve: () => void;
+	reject: (err: Error) => void;
 };
 export type MoveAtom = {
 	type: 'move';
@@ -44,12 +46,14 @@ export type MoveAtom = {
 	newKey: string;
 	execute: () => MaybePromise<void>;
 	resolve: () => void;
+	reject: (err: Error) => void;
 };
 export type MkdirAtom = {
 	type: 'mkdir';
 	key: string;
 	execute: () => MaybePromise<void>;
 	resolve: () => void;
+	reject: (err: Error) => void;
 };
 export type InputAtom = WriteAtom | DeleteAtom | MoveAtom | MkdirAtom;
 export type CustomAtom = {

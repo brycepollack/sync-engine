@@ -9,10 +9,22 @@ export { default as RemoveRecord } from './tasks/RemoveRecord';
 export { default as ResolveConflict } from './tasks/ResolveConflict';
 export { default as MoveLocal } from './tasks/MoveLocal';
 export { default as MoveRemote } from './tasks/MoveRemote';
-export type * from './tasks/interface';
-export type * from './decision/interface';
+export type {
+	BaseTask,
+	BaseTaskOptions,
+	TaskNames,
+	ConflictResolver,
+	ConflictResolverPayload,
+} from './tasks/interface';
+export type {
+	TaskOptions,
+	TaskFactory,
+	TaskOptionsMap,
+	Decider,
+	DeciderInput,
+} from './decision/interface';
 export { taskMap } from './decision/interface';
-export { BaseTask, getTaskColor, getTaskIcon } from './tasks/interface';
+export { getTaskColor, getTaskIcon } from './tasks/interface';
 export { default as postTraversal } from './utils/post-traversal';
 export { default as detectMoves } from './utils/detect-moves';
 export { default as bidirectionalDecider } from './decision/bidirectional';

@@ -41,7 +41,7 @@ export function generateSettingEntry({
 				const value = parse(text.inputEl.value, type);
 				if (
 					value === undefined ||
-					isNaN(value) ||
+					Number.isNaN(value) ||
 					value < 0 ||
 					value > MAX_32BIT_VALUE ||
 					(rejectZero && value === 0)
@@ -87,7 +87,7 @@ function format(value: number, type: InputType): string {
 function parse(value: string, type: InputType): number | undefined {
 	switch (type) {
 		case 'number': {
-			return parseFloat(value);
+			return Number.parseFloat(value);
 		}
 		case 'time': {
 			return parseTime(value);

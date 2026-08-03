@@ -34,6 +34,7 @@ This is the monorepo for an extensible Obsidian syncing plugin to sync vault fil
 
 - Plugin & module SDK: `packages/plugin/`, package name `@hesprs/sync-engine-sdk`, `dev` builds SDK.
 - WebDAV module: `packages/webdav/`, package name `webdav`.
+- S3 module: `packages/s3/`, package name `s3`.
 - Encryption module: `packages/encryption/`, package name `encryption`.
 - Shared utils: `packages/shared/`, package name `@repo/shared`.
 - Documentation site: `docs/`, package name `docs`.
@@ -44,12 +45,13 @@ This is the monorepo for an extensible Obsidian syncing plugin to sync vault fil
 
 - For mobile compatibility, Node.js API prohibited.
 - Sentence case for UI text.
+- Module-specific behavior should not pollute plugin core.
 - All Obsidian API mocks go `packages/shared/src/obsidian-mock.ts`.
 - Use inline Tailwind CSS for common styling, only use semantic CSS for animations and complex compositions. (Documentation website doesn't use TailwindCSS, you need to edit `docs/.vitepress/theme/styles.css`)
 - When any function or class needs to use `Context` as argument, prefer structural typing instead of direct `Context`.
 - Excluding main plugin, shared utils and documentation site, all packages are Sync Engine modules, they use the SDK and follow unified module structure.
 - `null` forbidden, use `undefined` consistently.
-- Lint warnings must be cleared.
+- Lint warnings must be cleared, except time-bounded ones (TODO with date, deprecated API for compat)
 
 ## Documentation
 

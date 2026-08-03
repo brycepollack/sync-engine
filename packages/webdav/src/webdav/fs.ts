@@ -9,14 +9,15 @@ import type {
 } from '@hesprs/sync-engine-sdk';
 import { concatBinary } from '@repo/shared/binary';
 import { getStatus } from '@repo/shared/get-status';
+import parseXML from '@repo/shared/parse-xml';
 import {
 	dirname,
+	isFolder,
 	normalizeChar,
 	normalizeKey,
 	normalizeUrl,
 	stripEndSlash,
 } from '@repo/shared/path';
-import parseXML from '@/parse-xml';
 import writeNextcloudChunkedUpload from './chunked-upload';
 import createWebDAVReadStream from './read-stream';
 import { buildUrl, getAuthorization, getFileUid, getHeader } from './utils';
@@ -71,7 +72,7 @@ const READ_MAX_CONCURRENT = 8;
 
 function getDavText(value: WebDAVPropValue) {
 	if (typeof value === 'string') return value;
-	if (!value || typeof value !== 'object') return undefined;
+	if (!value || typeof value !== 'object') return;
 	const text = value['#text'];
 	return typeof text === 'string' ? text : undefined;
 }
@@ -84,7 +85,7 @@ function isCollectionResource(resourcetype: WebDAVProp['resourcetype']) {
 
 function isSuccessStatus(status: string | undefined) {
 	if (!status) return true;
-	const match = /\s(?<code>\d{3})(?:\s|$)/.exec(status);
+	const match = /\s(?<code>\d{3})(?:\s|$)/v.exec(status);
 	if (!match) return false;
 	const code = Number.parseInt(match.groups?.code ?? '', 10);
 	return code >= 200 && code < 300;
@@ -135,7 +136,7 @@ function toStat(endpoint: string, { propstat, href }: WebDAVResponseItem): Stat 
 }
 
 function extractNextLink(linkHeader: string): string | undefined {
-	const matches = /<(?<href>[^>]+)>;\s*rel="next"/.exec(linkHeader);
+	const matches = /<(?<href>[^>]+)>;\s*rel="next"/v.exec(linkHeader);
 	return matches?.groups?.href;
 }
 
@@ -218,7 +219,7 @@ export default class WebdavFs implements RootFs {
 		return response.bytes();
 	}
 
-	async readStream(key: string, { size }: FileStat) {
+	readStream(key: string, { size }: FileStat) {
 		return createWebDAVReadStream({
 			chunkSize: READ_CHUNK_SIZE,
 			maxConcurrent: READ_MAX_CONCURRENT,
@@ -254,19 +255,19 @@ export default class WebdavFs implements RootFs {
 
 	async writeStream(key: string, value: ReadableStream<Binary>, { size }: FileStat) {
 		if (this.options.chunkedUpload)
-			return await writeNextcloudChunkedUpload(
+			return writeNextcloudChunkedUpload(
 				{
 					auth: this.auth,
 					endpoint: this.endpoint,
 					request: this.request,
-					stat: async (targetKey) => await this.stat(targetKey),
+					stat: (targetKey) => this.stat(targetKey),
 					username: this.options.username,
 				},
 				key,
 				value,
 				size,
 			);
-		return await this.write(key, await collectStreamToBinary(value));
+		return this.write(key, await collectStreamToBinary(value));
 	}
 
 	async delete(key: string) {
@@ -311,7 +312,7 @@ export default class WebdavFs implements RootFs {
 	}
 
 	async stat(key: string): Promise<Stat> {
-		if (key === '/') return { isDir: true, key: '/' } satisfies FolderStat;
+		if (isFolder(key)) return { isDir: true, key } satisfies FolderStat;
 		const { auth, endpoint, request } = this;
 		const items = await propfind({ auth, endpoint, key, request });
 		const item = items.find((candidate) => isTargetItem(key, endpoint, candidate));

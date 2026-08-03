@@ -55,8 +55,6 @@ unsubscribe();
 | `executionStarted`     | `Array<BaseTask>`                                                                   |
 | `tasksConfirmed`       | `Array<BaseTask>`                                                                   |
 | `deleteConfirmed`      | `{ delete: Array<RemoveLocal>; reupload: Array<RemoveLocal> }`                      |
-| `migrationProgress`    | `Progress`                                                                          |
-| `migrationFailed`      | `string` error message                                                              |
 
 ::: tip
 

@@ -32,6 +32,7 @@ test('mkdir chain waits for ancestor mkdir', async () => {
 				await root.promise;
 			},
 			key: 'folder/',
+			reject: () => {},
 			resolve: () => {},
 			type: 'mkdir',
 		},
@@ -41,15 +42,17 @@ test('mkdir chain waits for ancestor mkdir', async () => {
 				await nested.promise;
 			},
 			key: 'folder/nested/',
+			reject: () => {},
 			resolve: () => {},
 			type: 'mkdir',
 		},
 		{
-			execute: async () => {
+			execute: () => {
 				logs.push('write:folder/nested/file.md');
 				return 'write-uid';
 			},
 			key: 'folder/nested/file.md',
+			reject: () => {},
 			resolve: () => {},
 			type: 'write',
 		},
@@ -86,15 +89,17 @@ test('move gates operations under destination', async () => {
 			},
 			newKey: 'folder/dst/',
 			oldKey: 'folder/src/',
+			reject: () => {},
 			resolve: () => {},
 			type: 'move',
 		},
 		{
-			execute: async () => {
+			execute: () => {
 				logs.push('write:folder/dst/note.md');
 				return 'dst-uid';
 			},
 			key: 'folder/dst/note.md',
+			reject: () => {},
 			resolve: () => {},
 			type: 'write',
 		},
@@ -117,18 +122,20 @@ test('folder deletion subsumes descendant deletions', async () => {
 	let childResolved = false;
 	const atoms: Array<InputAtom> = [
 		{
-			execute: async () => {
+			execute: () => {
 				logs.push('delete:folder/');
 			},
 			key: 'folder/',
+			reject: () => {},
 			resolve: () => {},
 			type: 'delete',
 		},
 		{
-			execute: async () => {
+			execute: () => {
 				throw new Error('descendant deletion should be subsumed');
 			},
 			key: 'folder/note.md',
+			reject: () => {},
 			resolve: () => {
 				childResolved = true;
 			},
@@ -148,20 +155,22 @@ test('parent move subsumes descendant move without freezing', async () => {
 	let descendantResolved = false;
 	const atoms: Array<InputAtom> = [
 		{
-			execute: async () => {
+			execute: () => {
 				logs.push('move:old/->new/');
 			},
 			newKey: 'new/',
 			oldKey: 'old/',
+			reject: () => {},
 			resolve: () => {},
 			type: 'move',
 		},
 		{
-			execute: async () => {
+			execute: () => {
 				throw new Error('descendant move should be subsumed');
 			},
 			newKey: 'new/note.md',
 			oldKey: 'old/note.md',
+			reject: () => {},
 			resolve: () => {
 				descendantResolved = true;
 			},
@@ -170,9 +179,9 @@ test('parent move subsumes descendant move without freezing', async () => {
 	];
 	const { executeAtom, optimized } = runOptimizer(atoms);
 	const pending = Promise.all(optimized.map(executeAtom));
-	const timeout = new Promise<never>((_, reject) =>
-		setTimeout(() => reject(new Error('optimizer timed out')), 100),
-	);
+	const timeout = new Promise<never>((_, reject) => {
+		setTimeout(() => reject(new Error('optimizer timed out')), 100);
+	});
 
 	await Promise.race([pending, timeout]);
 	expect(logs).toStrictEqual(['move:old/->new/']);
@@ -189,15 +198,17 @@ test('delete blocks folder/file collision write', async () => {
 				await release.promise;
 			},
 			key: 'folder/',
+			reject: () => {},
 			resolve: () => {},
 			type: 'delete',
 		},
 		{
-			execute: async () => {
+			execute: () => {
 				logs.push('write:folder');
 				return 'file-uid';
 			},
 			key: 'folder',
+			reject: () => {},
 			resolve: () => {},
 			type: 'write',
 		},

@@ -1,5 +1,8 @@
 // oxlint-disable no-useless-constructor
 // oxlint-disable typescript/no-extraneous-class
+// oxlint-disable eslint/no-empty-function
+// oxlint-disable eslint/require-await
+// oxlint-disable typescript/require-await
 
 export async function requestUrl() {
 	return {
@@ -15,7 +18,7 @@ export const Platform = {
 };
 
 export function normalizePath(path: string) {
-	return path.replace(/\\/g, '/').replace(/\/+/g, '/');
+	return path.replaceAll('\\', '/').replaceAll(/\/+/gv, '/');
 }
 
 export class Notice {

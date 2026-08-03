@@ -2,7 +2,14 @@ import type { Events, Translations } from '@';
 import type { Ref } from 'synthkernel';
 import { ref } from 'synthkernel';
 import type { Fs, ListReporter } from '@/fs';
-import type { ConflictResolver, Decider, TaskFactory, TaskNames, TaskOptionsMap } from '@/sync';
+import type {
+	BaseTask,
+	ConflictResolver,
+	Decider,
+	TaskFactory,
+	TaskNames,
+	TaskOptionsMap,
+} from '@/sync';
 import type { GlobMatchRule, Progress, Stat, StatsMap, TogglableValue } from '@/types';
 import {
 	RemoveLocal,
@@ -10,7 +17,6 @@ import {
 	Upload,
 	AddRecord,
 	RemoveRecord,
-	BaseTask,
 	detectMoves,
 	postTraversal,
 	syncCancelledError,

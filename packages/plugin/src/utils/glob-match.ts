@@ -26,7 +26,7 @@ function parsePath(path: string): Path {
 }
 
 function escapeRegExpCharacter(character: string): string {
-	return /[\\^$.*+?()[\]{}|]/.test(character) ? `\\${character}` : character;
+	return /[\\\(\)\[\]\{\}\|^$.*+?]/v.test(character) ? `\\${character}` : character;
 }
 
 function compileSegment(pattern: string, flags: string): SegmentMatcher {
@@ -70,7 +70,7 @@ function compileRule(rule: GlobMatchRule): CompiledRule | undefined {
 
 	const anchored = expression.startsWith('/');
 	const directoryOnly = expression.endsWith('/');
-	const body = expression.replace(/^\/+|\/+$/g, '');
+	const body = expression.replaceAll(/^\/+|\/+$/gv, '');
 	if (!body) return undefined;
 
 	const parts = body.split('/');
@@ -200,7 +200,7 @@ function canMatchAnyDescendant(rule: CompiledRule, path: Path): boolean {
 	const visited = new Set<string>();
 
 	while (pending.length > 0) {
-		const [index, consumed] = pending.pop()!;
+		const [index, consumed] = pending.pop() as [number, boolean];
 		const key = `${index}:${consumed}`;
 		if (visited.has(key)) continue;
 		visited.add(key);
@@ -211,10 +211,8 @@ function canMatchAnyDescendant(rule: CompiledRule, path: Path): boolean {
 		}
 
 		const segment = rule.segments[index];
-		if (segment === '**') {
-			pending.push([index + 1, consumed]);
-			pending.push([index, true]);
-		} else pending.push([index + 1, true]);
+		if (segment === '**') pending.push([index + 1, consumed], [index, true]);
+		else pending.push([index + 1, true]);
 	}
 	return false;
 }

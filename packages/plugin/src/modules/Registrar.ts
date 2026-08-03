@@ -29,7 +29,7 @@ export type ConflictResolverEntry = {
 	resolver: ConflictResolver;
 };
 
-type GeneralFn = (...args: General) => General;
+type GeneralFn = (...args: ReadonlyArray<General>) => unknown;
 type RejectableApply<F extends GeneralFn> = (...input: Parameters<F>) => ReturnType<F> | undefined;
 type OrderedApplyEntry<F extends GeneralFn> = { apply: RejectableApply<F>; priority: number };
 
@@ -45,7 +45,7 @@ export type SettingEntry = {
 };
 
 export type RequestParam = Omit<RequestUrlParam, 'body'> & { body?: string | Binary };
-type RequestResponse = {
+export type RequestResponse = {
 	text: () => string;
 	bytes: () => Binary;
 	json: () => General;
@@ -63,7 +63,7 @@ const request: Request = async (params: RequestParam | string) => {
 	return {
 		bytes: () => toUint8Array(response.arrayBuffer),
 		headers: response.headers,
-		json: () => response.json,
+		json: () => response.json as object,
 		status: response.status,
 		text: () => response.text,
 	};
@@ -100,32 +100,12 @@ export default class Registrar {
 		);
 	}
 
-	private readonly setRegister =
-		<T>(registry: Set<T>) =>
-		(entry: T) => {
-			registry.add(entry);
-			return () => registry.delete(entry);
-		};
-
-	private readonly mapRegister =
-		<T>(registry: Map<string, T>) =>
-		(key: string, entry: T) => {
-			registry.set(key, entry);
-			return () => registry.delete(key);
-		};
-
-	private readonly registerCss = (css: string) => {
-		const style = createEl('style', { text: css, type: 'text/css' });
-		document.head.appendChild(style);
-		return () => style.remove();
-	};
-
 	private readonly getVaultRequest = () =>
-		this.wrapInOrder(createVaultRequest(this.ctx.app), this.localRequestMiddlewareRegistry);
+		wrapInOrder(createVaultRequest(this.ctx.app), this.localRequestMiddlewareRegistry);
 
 	private readonly createLocalFs = () => {
 		const { vault } = this.ctx.app;
-		return this.wrapInOrder(
+		return wrapInOrder(
 			new VaultFs(this.getVaultRequest(), vault.getName()),
 			this.localFsWrapperRegistry,
 		);
@@ -137,46 +117,10 @@ export default class Registrar {
 			if (!remoteFs) throw new Error('Please install a backend!');
 			throw new Error(`Backend "${remoteFs}" is not installed!`);
 		}
-		return this.wrapInOrder(entry.instantiate(this.getRequest()), this.remoteFsWrapperRegistry);
+		return wrapInOrder(entry.instantiate(this.getRequest()), this.remoteFsWrapperRegistry);
 	};
 
-	private readonly getRequest = () =>
-		this.wrapInOrder(request, this.remoteRequestMiddlewareRegistry);
-
-	private readonly wrapInOrder = <T>(initial: T, set: Set<OrderedWrapperEntry<T>>) => {
-		const middlewares: Record<number, Array<RejectableWrapper<T>>> = {};
-		for (const { apply, priority } of set) {
-			middlewares[priority] ??= [];
-			middlewares[priority].push(apply);
-		}
-		let result = initial;
-		for (const orders of Object.values(middlewares))
-			for (const middleware of orders) {
-				const wrapped = middleware(result);
-				if (wrapped) {
-					result = wrapped;
-					break;
-				}
-			}
-		return result;
-	};
-
-	private readonly applyFirst = <F extends GeneralFn>(
-		set: Set<OrderedApplyEntry<F>>,
-		...input: Parameters<F>
-	) => {
-		const middlewares: Record<number, Array<RejectableApply<F>>> = {};
-		for (const { apply, priority } of set) {
-			middlewares[priority] ??= [];
-			middlewares[priority].push(apply);
-		}
-		for (const orders of Object.values(middlewares))
-			for (const apply of orders) {
-				const result = apply(...input);
-				if (result) return result;
-			}
-		throw new Error('No qualified apply found!');
-	};
+	private readonly getRequest = () => wrapInOrder(request, this.remoteRequestMiddlewareRegistry);
 
 	private readonly getCheckConnection = (remoteFs = this.settings.remoteFs) => {
 		const entry = this.remoteFsRegistry.get(remoteFs);
@@ -194,11 +138,11 @@ export default class Registrar {
 	};
 
 	private readonly optimizeLocal: BatchOptimizer = (input) =>
-		this.applyFirst(this.localOptimizerRegistry, input);
+		applyFirst(this.localOptimizerRegistry, input);
 	private readonly optimizeRemote: BatchOptimizer = (input) =>
-		this.applyFirst(this.remoteOptimizerRegistry, input);
+		applyFirst(this.remoteOptimizerRegistry, input);
 	private readonly listRemote: RemoteLister = (input) =>
-		this.applyFirst(this.remoteListerRegistry, input);
+		applyFirst(this.remoteListerRegistry, input);
 
 	private readonly getConflictResolver = () => {
 		const id = this.settings.conflictResolver;
@@ -243,18 +187,22 @@ export default class Registrar {
 		listRemote: this.listRemote,
 		optimizeLocal: this.optimizeLocal,
 		optimizeRemote: this.optimizeRemote,
-		registerConflictResolver: this.mapRegister(this.conflictResolverRegistry),
-		registerCss: this.registerCss,
-		registerDecider: this.mapRegister(this.deciderRegistry),
-		registerLocalFsWrapper: this.setRegister(this.localFsWrapperRegistry),
-		registerLocalOptimizer: this.setRegister(this.localOptimizerRegistry),
-		registerLocalRequestMiddleware: this.setRegister(this.localRequestMiddlewareRegistry),
-		registerRemoteFs: this.mapRegister(this.remoteFsRegistry),
-		registerRemoteFsWrapper: this.setRegister(this.remoteFsWrapperRegistry),
-		registerRemoteLister: this.setRegister(this.remoteListerRegistry),
-		registerRemoteOptimizer: this.setRegister(this.remoteOptimizerRegistry),
-		registerRemoteRequestMiddleware: this.setRegister(this.remoteRequestMiddlewareRegistry),
-		registerSetting: this.setRegister(this.settingRegistry),
+		registerConflictResolver: mapRegister(this.conflictResolverRegistry),
+		registerCss: (css: string) => {
+			const style = createEl('style', { text: css, type: 'text/css' });
+			document.head.append(style);
+			return () => style.remove();
+		},
+		registerDecider: mapRegister(this.deciderRegistry),
+		registerLocalFsWrapper: setRegister(this.localFsWrapperRegistry),
+		registerLocalOptimizer: setRegister(this.localOptimizerRegistry),
+		registerLocalRequestMiddleware: setRegister(this.localRequestMiddlewareRegistry),
+		registerRemoteFs: mapRegister(this.remoteFsRegistry),
+		registerRemoteFsWrapper: setRegister(this.remoteFsWrapperRegistry),
+		registerRemoteLister: setRegister(this.remoteListerRegistry),
+		registerRemoteOptimizer: setRegister(this.remoteOptimizerRegistry),
+		registerRemoteRequestMiddleware: setRegister(this.remoteRequestMiddlewareRegistry),
+		registerSetting: setRegister(this.settingRegistry),
 		remoteFsRegistry: this.remoteFsRegistry,
 		rerenderSettingTab: this.rerenderSettingTab,
 	};
@@ -271,10 +219,55 @@ class SettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		if (!this.containerEl) return;
 		this.containerEl.empty();
 		const sorted: Record<number, (el: HTMLElement) => void> = {};
 		for (const { priority, apply } of this.settingRegistry) sorted[priority] = apply;
 		for (const render of Object.values(sorted)) render(this.containerEl);
 	}
+}
+
+function wrapInOrder<T>(initial: T, set: Set<OrderedWrapperEntry<T>>) {
+	const middlewares: Record<number, Array<RejectableWrapper<T>>> = {};
+	for (const { apply, priority } of set) {
+		middlewares[priority] ??= [];
+		middlewares[priority].push(apply);
+	}
+	let result = initial;
+	for (const orders of Object.values(middlewares))
+		for (const middleware of orders) {
+			const wrapped = middleware(result);
+			if (wrapped) {
+				result = wrapped;
+				break;
+			}
+		}
+	return result;
+}
+
+function applyFirst<F extends GeneralFn>(set: Set<OrderedApplyEntry<F>>, ...input: Parameters<F>) {
+	const middlewares: Record<number, Array<RejectableApply<F>>> = {};
+	for (const { apply, priority } of set) {
+		middlewares[priority] ??= [];
+		middlewares[priority].push(apply);
+	}
+	for (const orders of Object.values(middlewares))
+		for (const apply of orders) {
+			const result = apply(...input);
+			if (result) return result;
+		}
+	throw new Error('No qualified apply found!');
+}
+
+function setRegister<T>(registry: Set<T>) {
+	return (entry: T) => {
+		registry.add(entry);
+		return () => registry.delete(entry);
+	};
+}
+
+function mapRegister<T>(registry: Map<string, T>) {
+	return (key: string, entry: T) => {
+		registry.set(key, entry);
+		return () => registry.delete(key);
+	};
 }

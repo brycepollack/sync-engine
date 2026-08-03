@@ -26,10 +26,7 @@ export async function deriveMasterSalt(remoteUid: string): Promise<Binary> {
 	return toUint8Array(digest.slice(0, MASTER_SALT_LENGTH));
 }
 
-export async function deriveMasterKey(
-	password: string | Binary,
-	masterSalt: Binary,
-): Promise<Binary> {
+export function deriveMasterKey(password: string | Binary, masterSalt: Binary): Promise<Binary> {
 	return argon2id({
 		hashLength: MASTER_KEY_LENGTH,
 		iterations: 3,
@@ -41,11 +38,11 @@ export async function deriveMasterKey(
 	}) as Promise<Binary>;
 }
 
-export async function deriveRootFileKey(masterKey: Binary): Promise<Binary> {
+export function deriveRootFileKey(masterKey: Binary): Promise<Binary> {
 	return deriveHkdfKey(masterKey, ROOT_FILE_KEY_INFO);
 }
 
-export async function deriveNameKey(masterKey: Binary): Promise<Binary> {
+export function deriveNameKey(masterKey: Binary): Promise<Binary> {
 	return deriveHkdfKey(masterKey, NAME_KEY_INFO);
 }
 
@@ -58,7 +55,7 @@ export async function encryptFileContent(rootFileKey: Binary, plaintext: Binary)
 	const encryptedChunks: Array<Binary> = [fileSalt];
 
 	for (
-		let offset = 0, chunkIndex = 0;
+		let chunkIndex = 0, offset = 0;
 		offset < plaintext.byteLength;
 		offset += CONTENT_CHUNK_SIZE, chunkIndex += 1
 	) {

@@ -6,8 +6,9 @@ export function digOriginal(wrapped: Fs) {
 	while ('original' in original) original = original.original;
 	return original;
 }
-export { default as MigrationModal } from '@/components/MigrationModal';
-export * from '@/utils/pipe';
+export { default as setNeedMigration } from '@/components/MigrationModal';
+export { default as prefixWrapper } from './prefix';
+export { pipe, readWithSize, writeWithValue } from '@/utils/pipe';
 
 export type {
 	Translate,
@@ -62,6 +63,8 @@ export type {
 	ConflictResolverEntry,
 	Request,
 	CheckConnectionResult,
+	RequestParam,
+	RequestResponse,
 } from '@/modules/Registrar';
 export type { RecordStore } from '@/modules/Storage';
 export type { ModuleMeta, AugmentedModuleMeta } from '@/modules/Extensibility';

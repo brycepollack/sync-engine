@@ -77,11 +77,7 @@ Encryption implementation in this module welcomes volunteer auditing.
 
 ## Enabling and Disabling
 
-The function is toggled via settings "Encryption" toggling. It allows users to set encryption password via Obsidian keychain. The toggle button triggers a modal informing users that:
-
-- all subsequent uploads will be encrypted.
-- ensure all devices have password and have "Encryption" enabled.
-- please delete remote base directory entirely and re-upload the entire vault if their vault is uploaded before
+The function is toggled via the **Encryption** setting. The password is stored in Obsidian's keychain. When a record store exists, changing the toggle opens a migration confirmation, which is similar to [the migration of asymmetric storage](../../usage/settings#asymmetric-storage).
 
 ## Sync Routine
 

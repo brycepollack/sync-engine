@@ -112,38 +112,20 @@ type WrappedFs = RootFs & { original: Fs };
 type Fs = WrappedFs | RootFs;
 ```
 
-For existing wrappers with priorities, and detailed behavior of each wrapper, see [deep-dive: file system wrappers](../deep-dive/file-system-wrappers).
+For existing wrappers with priorities, and detailed behavior of each wrapper, see [deep dive: file system wrappers](../deep-dive/file-system-wrappers).
 
-### Writing a Wrapper
+### `prefixWrapper`
 
-A wrapper is a function that accepts an `Fs` and returns an `Fs`.
+Prefix wrapper is a runtime export for backends to support base-directory-like behavior easily. Behavior detail see [Prefix Wrapper](../deep-dive/file-system-wrappers#prefix-wrapper).
 
 ```ts
-import type { Progress, Fs, WrappedFs } from '@hesprs/sync-engine-sdk';
+import { prefixWrapper } from '@hesprs/sync-engine-sdk';
 
-class PrefixFs implements WrappedFs {
-  constructor(
-    public readonly original: Fs,
-    private readonly prefix: string,
-  ) {}
+const scopedFs = prefixWrapper(remoteFs, 'team/vault/');
 
-  getUid(): string {
-    return `${this.original.getUid()}~${this.prefix}`;
-  }
-
-  read(key: string, stat: FileStat) {
-    return this.original.read(this.prefix + key, stat);
-  }
-
-  // ... delegate all methods, prepending prefix / stripping it from results
-}
-
-export default function prefixWrapper(original: Fs, prefix: string): WrappedFs {
-  return new PrefixFs(original, prefix);
-}
+await scopedFs.write('notes/today.md', value, stat);
+// Delegates to remoteFs.write('team/vault/notes/today.md', value, stat)
 ```
-
-Examples: [Optimization Wrapper](https://github.com/hesprs/sync-engine/tree/main/packages/plugin/src/fs/wrappers/optimization.ts), [Encryption Wrapper](https://github.com/hesprs/sync-engine/tree/main/packages/encryption/src/wrapper/index.ts), [Base Directory Wrapper](https://github.com/hesprs/sync-engine/tree/main/packages/webdav/src/base-dir.ts).
 
 ### Registering a Wrapper
 
@@ -151,7 +133,7 @@ See [registration](./registration#filesystem-wrappers).
 
 ## Batch Optimization
 
-The optimization wrapper (priority 2000) collects atomic FS operations and passes them to a `BatchOptimizer`. This allows backend-specific optimizations like S3 batch deletion or hierarchical operation reordering. For how the optimizer integrates with the wrapper chain, see [deep-dive: file system wrappers](../deep-dive/file-system-wrappers#optimization-wrapper).
+The optimization wrapper (priority 2000) collects atomic FS operations and passes them to a `BatchOptimizer`. This allows backend-specific optimizations like S3 batch deletion or hierarchical operation reordering. For how the optimizer integrates with the wrapper chain, see [deep dive: file system wrappers](../deep-dive/file-system-wrappers#optimization-wrapper).
 
 Sync Engine registers a default Hierarchical Optimizer at priority `10000` for both local and remote. This optimizer is designed to work in folder-file based file systems.
 
@@ -163,12 +145,14 @@ type WriteAtom = {
   key: string;
   execute: () => MaybePromise<string>;
   resolve: (uid: string) => void;
+  reject: (error: Error) => void;
 };
 type DeleteAtom = {
   type: 'delete';
   key: string;
   execute: () => MaybePromise<void>;
   resolve: () => void;
+  reject: (error: Error) => void;
 };
 type MoveAtom = {
   type: 'move';
@@ -176,12 +160,14 @@ type MoveAtom = {
   newKey: string;
   execute: () => MaybePromise<void>;
   resolve: () => void;
+  reject: (error: Error) => void;
 };
 type MkdirAtom = {
   type: 'mkdir';
   key: string;
   execute: () => MaybePromise<void>;
   resolve: () => void;
+  reject: (error: Error) => void;
 };
 type InputAtom = WriteAtom | DeleteAtom | MoveAtom | MkdirAtom;
 
@@ -202,42 +188,56 @@ The optimizer receives the full atom list and can:
 - Replace multiple atoms with a single `CustomAtom`
 - Add or remove atoms
 - Wrap an atom's `execute` by reassign it to await `executeAtom()` of dependency atoms
-- Resolve an atom directly
+- Resolve or reject an atom directly
 
 `executeAtom` invokes an atom's `execute()` from the parent reference and caches the result universally, so the atom is only executed once using the outermost wrapping.
 
+When an atom succeeds, call `resolve()` with its UID for writes or without an argument for other operations. When it fails, call `reject(error)`. Rejection settles the original operation's promise and must propagate through custom atoms and any atoms removed by an optimizer.
+
 ::: warning
 
-If the optimizer removes atoms from the input array, it **must** call `resolve()` on them (either directly or via custom atoms). Otherwise syncing hangs forever.
+If the optimizer removes atoms from the input array, it **must** call `resolve()` or `reject(error)` on them (either directly or via custom atoms). Otherwise the original operation never settles.
 
 :::
 
 ### Example: S3 Batch Delete Optimizer
 
 ```ts
-import type { RemoteFs, OutputAtom, OptimizerInput } from '@hesprs/sync-engine-sdk';
-import type { S3Fs } from './s3/fs';
-import { BATCH_DELETE_MAX_KEYS } from './s3/fs';
+import type { OptimizerInput, OptimizerOutput } from '@hesprs/sync-engine-sdk';
+import { digOriginal } from '@hesprs/sync-engine-sdk';
+import S3Fs, { BATCH_DELETE_MAX_KEYS } from './s3/fs';
 
-export default function batchDeleteOptimizer(atoms: Array<InputAtom>, fs: S3Fs): Array<OutputAtom> {
-  const deleteAtoms = atoms.filter((a) => a.type === 'delete');
-  const otherAtoms: Array<OutputAtom> = atoms.filter((a) => a.type !== 'delete');
-
-  if (!deleteAtoms.length) return atoms;
-
-  const keys = deleteAtoms.map((a) => ({ key: a.key, resolve: a.resolve }));
-  const batches: Array<Array<{ key: string; resolve: () => void }>> = [];
-  for (let i = 0; i < keys.length; i += BATCH_DELETE_MAX_KEYS)
-    batches.push(keys.slice(i, i + BATCH_DELETE_MAX_KEYS));
-
-  const batchAtoms: Array<OutputAtom> = batches.map((batch) => ({
-    type: 'custom' as const,
+export default function s3BatchDeleteOptimizer({
+  atoms,
+  fs,
+}: OptimizerInput): OptimizerOutput | undefined {
+  const original = digOriginal(fs);
+  if (!(original instanceof S3Fs)) return undefined;
+  const s3Fs = original;
+  type DeleteAtom = Extract<(typeof atoms)[number], { type: 'delete' }>;
+  const deleteAtoms = atoms.filter((a): a is DeleteAtom => a.type === 'delete');
+  const otherAtoms = atoms.filter((a) => a.type !== 'delete');
+  if (deleteAtoms.length === 0) return atoms;
+  const batchGroups: Array<Array<DeleteAtom>> = [];
+  for (let i = 0; i < deleteAtoms.length; i += BATCH_DELETE_MAX_KEYS)
+    batchGroups.push(deleteAtoms.slice(i, i + BATCH_DELETE_MAX_KEYS));
+  const batchAtoms = batchGroups.map((batch) => ({
     execute: async () => {
-      await fs.batchDelete(batch.map(({ key }) => key));
-      batch.forEach(({ resolve }) => resolve());
+      const keys = batch.map((a) => a.key);
+      try {
+        const result = await s3Fs.batchDelete(keys);
+        batch.forEach((atom) => {
+          const status = result[atom.key];
+          if (status === true) atom.resolve();
+          else atom.reject(new Error(status ?? `S3 batch delete missing result for ${atom.key}.`));
+        });
+      } catch (error) {
+        const reason = error instanceof Error ? error : new Error(String(error));
+        batch.forEach((atom) => atom.reject(reason));
+      }
     },
+    type: 'custom' as const,
   }));
-
   return [...otherAtoms, ...batchAtoms];
 }
 ```
@@ -257,26 +257,3 @@ function digOriginal(wrapped: Fs): RootFs;
 ```
 
 Unwraps nested wrappers to the underlying root filesystem. Use when an optimizer needs to call backend-specific methods not on the `Fs` interface (e.g., `S3Fs.batchDelete()`), combined with `instanceof` check on the returned `RootFs`.
-
-## `MigrationModal`
-
-A runtime export (not a `register*` API) for Obsidian modals that require user confirmation during migrations.
-
-```ts
-import { MigrationModal } from '@hesprs/sync-engine-sdk';
-
-new MigrationModal(ctx, {
-  content: 'Migration required.',
-  apply: async () => {
-    await migrate();
-  },
-  onCancel: () => {
-    console.log('Migration cancelled.');
-  },
-}).open();
-```
-
-The constructor takes two arguments:
-
-- **`ctx`** — requires `app`, `on`, `dispatch`, `translate` (typed to `MigrationModalTranslations`), `requestSync`, `initializeSync`, and `memoryDB`. The full `Context` supplies these.
-- **`options`** — `{ content: string | DocumentFragment; apply: () => MaybePromise<void>; onCancel?: () => void }`.

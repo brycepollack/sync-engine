@@ -58,7 +58,7 @@ function releaseMemory(state: MemoryControlSharedState, size: number) {
 
 class MemoryControlRemoteFs implements WrappedFs {
 	constructor(
-		public readonly original: Fs,
+		readonly original: Fs,
 		private readonly state: MemoryControlSharedState,
 	) {}
 

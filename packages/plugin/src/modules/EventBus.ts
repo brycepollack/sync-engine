@@ -66,14 +66,14 @@ export default class EventBus {
 			}),
 			on('taskCompleted', ({ key, name }) => {
 				const thisSync = getThisSync();
-				if (!thisSync.succeededTasks) thisSync.succeededTasks = 1;
-				else thisSync.succeededTasks += 1;
+				if (thisSync.succeededTasks) thisSync.succeededTasks += 1;
+				else thisSync.succeededTasks = 1;
 				putSyncLog(`Task \`${name}\` of \`${key}\` succeeded.`);
 			}),
 			on('taskFailed', ({ key, name, error }) => {
 				const thisSync = getThisSync();
-				if (!thisSync.failedTasks) thisSync.failedTasks = 1;
-				else thisSync.failedTasks += 1;
+				if (thisSync.failedTasks) thisSync.failedTasks += 1;
+				else thisSync.failedTasks = 1;
 				putSyncLog(
 					`Task \`${name}\` of \`${key}\` failed with error: \`${error}\`.`,
 					'error',
@@ -96,12 +96,6 @@ export default class EventBus {
 				else putSyncLog(`Sync ended with result: \`${result}\`.`);
 				isIdle(true);
 			}),
-			on('migrationProgress', ({ completed }) => {
-				if (completed === 0) putGeneralLog('Migration started.');
-			}),
-			on('migrationFailed', (error) =>
-				putGeneralLog(`Migration failed: \`${error}\`.`, 'error'),
-			),
 			on('moduleLoaded', (name) => putGeneralLog(`Module \`${name}\` loaded.`)),
 			on('moduleUnloaded', (name) => putGeneralLog(`Module \`${name}\` unloaded.`)),
 		);

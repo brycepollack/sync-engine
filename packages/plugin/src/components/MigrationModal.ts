@@ -1,12 +1,12 @@
 import type { Events } from '@';
-import type { App } from 'obsidian';
+import type { App, ToggleComponent } from 'obsidian';
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ExistingMemoryDB } from '@/modules/Bootstrap';
 import type { Dispatch, On } from '@/modules/EventBus';
 import type { Translate } from '@/modules/I18n';
 import type { Infras } from '@/modules/Registrar';
 import type { SyncTerminateReason } from '@/modules/Sync';
-import type { MaybePromise } from '@/types';
+import type { MaybePromise, Progress } from '@/types';
 import renderProgress from '@/components/render-progress';
 import roundPercent from '@/utils/round-percent';
 import toErrorMessage from '@/utils/to-error-message';
@@ -27,24 +27,29 @@ export type MigrationModalTranslations = {
 	done: string;
 };
 
-export default class MigrationModal extends Modal {
+type MigrationEvents = {
+	migrationProgress: Progress;
+	migrationFailed: string;
+};
+
+type MigrationContext = {
+	app: App;
+	on: On<MigrationEvents>;
+	dispatch: Dispatch<MigrationEvents & Events>;
+	translate: Translate<MigrationModalTranslations>;
+	requestSync: (trigger: string) => Promise<SyncTerminateReason>;
+	initializeSync: () => Infras;
+	memoryDB: ExistingMemoryDB;
+};
+
+class MigrationModal extends Modal {
 	private readonly cleanupCallbacks: Array<() => void> = [];
-	private migrationDone = false;
 
 	constructor(
-		private readonly ctx: {
-			app: App;
-			on: On<Events>;
-			dispatch: Dispatch<Events>;
-			translate: Translate<MigrationModalTranslations>;
-			requestSync: (trigger: string) => Promise<SyncTerminateReason>;
-			initializeSync: () => Infras;
-			memoryDB: ExistingMemoryDB;
-		},
+		private readonly ctx: MigrationContext,
 		private readonly options: {
 			content: string | DocumentFragment;
 			apply: () => MaybePromise<void>;
-			onCancel?: () => void;
 		},
 	) {
 		super(ctx.app);
@@ -63,7 +68,7 @@ export default class MigrationModal extends Modal {
 
 		if (typeof content === 'string')
 			contentEl.createEl('p', { cls: 'whitespace-pre-wrap', text: content });
-		else contentEl.appendChild(content);
+		else contentEl.append(content);
 		contentEl.createEl('p', {
 			cls: 'whitespace-pre-wrap',
 			text: translate('migrationDescription'),
@@ -74,9 +79,8 @@ export default class MigrationModal extends Modal {
 				button.setButtonText(translate('cancel')).onClick(this.close.bind(this)),
 			)
 			.addButton((button) =>
-				button.setButtonText(translate('toggleWithoutMigration')).onClick(() => {
-					void apply();
-					this.migrationDone = true;
+				button.setButtonText(translate('toggleWithoutMigration')).onClick(async () => {
+					await apply();
 					this.close();
 				}),
 			)
@@ -89,7 +93,7 @@ export default class MigrationModal extends Modal {
 	}
 
 	private readonly handleMigration = () => {
-		const { on, translate } = this.ctx;
+		const { on, translate, dispatch } = this.ctx;
 		this.contentEl.empty();
 		this.setTitle(translate('migrationProcess'));
 		const { left, right, bar } = renderProgress(this.contentEl, 'mb-3');
@@ -105,16 +109,15 @@ export default class MigrationModal extends Modal {
 
 		this.cleanupCallbacks.push(
 			on('migrationProgress', ({ total, completed, current }) => {
+				if (completed === 0) dispatch('logGeneral', 'Migration started.');
 				const percent = roundPercent(completed, total);
 				right.setText(`${completed}/${total} ${translate('completed')}`);
 				if (current) left.setText(current);
 				bar.setValue(percent);
-				if (percent === 100) {
-					renderControls('done');
-					this.migrationDone = true;
-				}
+				if (percent === 100) renderControls('done');
 			}),
 			on('migrationFailed', () => {
+				dispatch('errorGeneral', 'Migration failed.');
 				left.setText(translate('migrationFailed'));
 				renderControls('done');
 			}),
@@ -175,8 +178,44 @@ export default class MigrationModal extends Modal {
 	};
 
 	onClose() {
-		if (!this.migrationDone) this.options.onCancel?.();
 		this.cleanupCallbacks.splice(0).forEach((fn) => fn());
 		this.contentEl.empty();
 	}
+}
+
+export default function setNeedMigration(
+	ctx: MigrationContext,
+	{
+		toggle,
+		needMigration,
+		content,
+		apply,
+	}: {
+		toggle: ToggleComponent;
+		needMigration?: (value: boolean) => MaybePromise<boolean>;
+		content: (value: boolean) => string | DocumentFragment;
+		apply: (value: boolean) => MaybePromise<void>;
+	},
+) {
+	let selfTrigger = false;
+	toggle.onChange((value) => {
+		if (selfTrigger) {
+			selfTrigger = false;
+			return;
+		}
+		void Promise.resolve(needMigration?.(value) ?? true).then((need) => {
+			if (need) {
+				selfTrigger = true;
+				toggle.setValue(!value); // Revert UI back, not migrated yet
+				new MigrationModal(ctx, {
+					apply: async () => {
+						await apply(value);
+						selfTrigger = true;
+						toggle.setValue(value);
+					},
+					content: content(value),
+				}).open();
+			} else void apply(value);
+		});
+	});
 }

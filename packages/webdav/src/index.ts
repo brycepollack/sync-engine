@@ -11,9 +11,8 @@ import type {
 	Settings,
 } from '@hesprs/sync-engine-sdk';
 import type { App } from 'obsidian';
-import { digOriginal } from '@hesprs/sync-engine-sdk';
+import { digOriginal, prefixWrapper } from '@hesprs/sync-engine-sdk';
 import type { WebdavTranslations } from './setting';
-import baseDirWrapper from './base-dir';
 import { en, zh } from './i18n';
 import webdavSetting from './setting';
 import { checkConnection } from './webdav/check-connection';
@@ -90,7 +89,7 @@ export default class Webdav {
 			registerRemoteFsWrapper({
 				apply: (fs) => {
 					if (digOriginal(fs) instanceof WebdavFs)
-						return baseDirWrapper(fs, this.moduleSettings.baseDirectory);
+						return prefixWrapper(fs, this.moduleSettings.baseDirectory);
 				},
 				priority: 6318,
 			}),

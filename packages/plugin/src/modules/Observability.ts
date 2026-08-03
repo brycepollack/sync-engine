@@ -53,7 +53,7 @@ export default class Observability {
 			else if (stage === 'completedNoop')
 				return `${this.t('completedNoop')}${this.sinceLastSyncText()}`;
 			else if (stage === 'failed') return this.t('failed');
-			else return '';
+			return '';
 		},
 		{
 			deps: [
@@ -269,7 +269,7 @@ export default class Observability {
 	private readonly exportLogs = async () => {
 		const { getLogs, app, dispatch, translate } = this.ctx;
 		const log = getLogs();
-		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+		const timestamp = new Date().toISOString().replaceAll(/[:.]/gv, '-');
 		const fileName = `${timestamp}.md`;
 		const dirPath = 'Sync Engine Logs';
 		const filePath = `${dirPath}/${fileName}`;

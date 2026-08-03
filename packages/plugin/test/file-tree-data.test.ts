@@ -10,7 +10,7 @@ function makeTask(input: {
 	prettyName?: string;
 }): BaseTask {
 	return {
-		exec: () => undefined,
+		exec: () => {},
 		key: input.key,
 		local: input.localIsDir === undefined ? undefined : ({ isDir: input.localIsDir } as never),
 		name: input.name,

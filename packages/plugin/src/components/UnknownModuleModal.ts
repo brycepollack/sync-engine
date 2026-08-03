@@ -36,8 +36,7 @@ export default class UnknownModuleModal extends Modal {
 		this.contentEl.addClass('markdown-rendered');
 
 		const content = this.contentEl.createDiv();
-		if (this.cachedInfo)
-			content.appendChild(translate('unknownModuleDescription', this.cachedInfo));
+		if (this.cachedInfo) content.append(translate('unknownModuleDescription', this.cachedInfo));
 		else
 			void app.vault.adapter.stat(path).then((stat) => {
 				if (!stat) {
@@ -53,7 +52,7 @@ export default class UnknownModuleModal extends Modal {
 					size: formatFileSize(size),
 				};
 				this.cachedInfo = fileInfo;
-				content.appendChild(translate('unknownModuleDescription', fileInfo));
+				content.append(translate('unknownModuleDescription', fileInfo));
 			});
 
 		new Setting(this.contentEl)

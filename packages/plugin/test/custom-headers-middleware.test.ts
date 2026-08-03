@@ -12,16 +12,16 @@ const response = {
 	text: () => 'ok',
 };
 
-test('custom headers middleware normalizes string input to request params', async () => {
-	const harness = request(async () => response);
+test('custom headers middleware normalizes string input to request params', () => {
+	const harness = request(() => Promise.resolve(response));
 	const wrapped = customHeadersMiddleware(harness.request, { 'x-added': 'value' });
 
 	expect(wrapped('note.md')).resolves.toStrictEqual(response);
 	expect(harness.calls).toStrictEqual([{ headers: { 'x-added': 'value' }, url: 'note.md' }]);
 });
 
-test('custom headers middleware merges supplied headers and overrides duplicates', async () => {
-	const harness = request(async () => response);
+test('custom headers middleware merges supplied headers and overrides duplicates', () => {
+	const harness = request(() => Promise.resolve(response));
 	const wrapped = customHeadersMiddleware(harness.request, {
 		'x-added': 'value',
 		'x-override': 'new',

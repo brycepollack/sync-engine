@@ -99,8 +99,8 @@ export default class SyncEngine extends Plugin {
 			remoteFs: '',
 			scheduledSync: { enabled: false, value: 15 * 60 * 1000 },
 			startupSync: { enabled: false, value: 5000 },
+			...((await this.loadData()) as Record<string, unknown>),
 		};
-		Object.assign(settings, await this.loadData());
 
 		migrateGlobMatchRules(settings);
 
@@ -137,7 +137,7 @@ export default class SyncEngine extends Plugin {
 		this.context = undefined;
 	}
 
-	readonly saveSettings = async () => await this.saveData(this.settings);
+	readonly saveSettings = () => this.saveData(this.settings);
 }
 
 // TODO: remove after August 20

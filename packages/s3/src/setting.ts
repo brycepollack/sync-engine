@@ -1,7 +1,8 @@
 import type { S3Settings } from '@';
-import type { Translate, Translations } from '@hesprs/sync-engine-sdk';
-import { normalizeBaseDir } from '@repo/shared/path';
-import { App, SecretComponent, Setting } from 'obsidian';
+import type { Fragment, Translate, Translations } from '@hesprs/sync-engine-sdk';
+import { normalizeBaseDir, normalizeUrl } from '@repo/shared/path';
+import { App, Notice, SecretComponent, Setting } from 'obsidian';
+import type { UrlStyle } from './s3/sigv4';
 import handleInput from './handle-input';
 
 export type S3Translations = {
@@ -21,7 +22,7 @@ export type S3Translations = {
 	bucketDescription: string;
 	bucketPlaceholder: string;
 	urlStyle: string;
-	urlStyleDescription: string;
+	urlStyleDescription: Fragment;
 	urlStyleVirtualHosted: string;
 	urlStylePath: string;
 	prefix: string;
@@ -54,14 +55,11 @@ export default function s3Setting(
 				invalidValue,
 				key: 'endpoint',
 				processValue: (value) => {
-					let url: URL;
 					try {
-						url = new URL(value);
+						return normalizeUrl(value);
 					} catch {
 						return false;
 					}
-					if (!['http:', 'https:'].includes(url.protocol)) return false;
-					return url.toString().replace(/\/+$/, '');
 				},
 				saveSettings,
 				settings,
@@ -131,11 +129,11 @@ export default function s3Setting(
 		.setDesc(translate('urlStyleDescription'))
 		.addDropdown((dropdown) => {
 			dropdown
-				.addOption('virtual-hosted', translate('urlStyleVirtualHosted'))
+				.addOption('virtualHosted', translate('urlStyleVirtualHosted'))
 				.addOption('path', translate('urlStylePath'))
 				.setValue(settings.urlStyle)
 				.onChange((value) => {
-					settings.urlStyle = value as 'virtual-hosted' | 'path';
+					settings.urlStyle = value as UrlStyle;
 					void saveSettings();
 				});
 		});
@@ -159,25 +157,23 @@ export default function s3Setting(
 		.setName(translate('proxyUrl'))
 		.setDesc(translate('proxyUrlDescription'))
 		.addText((text) => {
-			text.setPlaceholder(translate('proxyUrlPlaceholder')).setValue(settings.proxyUrl);
-			handleInput({
-				invalidValue,
-				key: 'proxyUrl',
-				processValue: (value) => {
-					const trimmed = value.trim();
-					if (!trimmed) return '';
-					let url: URL;
+			text.setPlaceholder(translate('proxyUrlPlaceholder'))
+				.setValue(settings.proxyUrl.value)
+				.inputEl.addEventListener('blur', () => {
+					const original = settings.proxyUrl.value;
 					try {
-						url = new URL(trimmed);
+						settings.proxyUrl.value = normalizeUrl(text.getValue());
 					} catch {
-						return false;
+						new Notice(translate('invalidValue'));
+						settings.proxyUrl.value = original;
 					}
-					if (!['http:', 'https:'].includes(url.protocol)) return false;
-					return url.toString().replace(/\/+$/, '');
-				},
-				saveSettings,
-				settings,
-				text,
-			});
-		});
+					text.setValue(settings.proxyUrl.value);
+				});
+		})
+		.addToggle((toggle) =>
+			toggle.setValue(settings.proxyUrl.enabled).onChange((value) => {
+				settings.proxyUrl.enabled = value;
+				void saveSettings();
+			}),
+		);
 }

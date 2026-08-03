@@ -17,6 +17,8 @@ type Request = (params: RequestParam | string) => Promise<RequestResponse>;
 
 `RequestParam` follows Obsidian's `RequestUrlParam`, except `body` uses the project's `Binary` (`Uint8Array`) instead of `ArrayBuffer` in Obsidian raw API. A string argument is treated as a `GET` toward this URL.
 
+`RequestResponse` is an exported SDK type describing the response returned by `Request`.
+
 ### Implementation
 
 The base implementation:
@@ -69,8 +71,8 @@ Before calling the adapter, `VaultRequest` removes a trailing slash from every n
 - `MOVE`: `adapter.rename()` to the normalized destination path.
 - `MKDIR`: calls `adapter.mkdir()`. Creating `/` is a no-op.
 - `EXISTS`: checks `vault.getAbstractFileByPath()` first, then fallback to `adapter.exists(path, true)`.
-- `STAT`: returns an stat object typed in Obsidian `Stat`; uses cached `TFile`/`TFolder` objects when `workspace.layoutReady`, otherwise falls back to `adapter.stat()`.
-- `LIST`: uses cached `TFolder.children` when the layout is ready and the key is not `/`; otherwise uses `adapter.list()`. Folder results are normalized with trailing slashes.
+- `STAT`: returns an stat object typed in Obsidian `Stat`; with `cached` enabled, uses cached `TFile`/`TFolder` objects when `workspace.layoutReady`, otherwise falls back to `adapter.stat()`.
+- `LIST`: with `cached` enabled, uses cached `TFolder.children` when the layout is ready and the key is not `/`; otherwise uses `adapter.list()`. Folder results are normalized with trailing slashes.
 
 ## Boundary
 

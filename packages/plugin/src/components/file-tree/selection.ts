@@ -56,11 +56,10 @@ export default function createFileTreeSelection(data: FileTreeData): {
 					for (const descendantId of node.selectableDescendantTaskIds)
 						if (usesCreationCascade(data.nodes[descendantId]))
 							setSelected(selectedTaskIds, descendantId, false, changed);
-			} else if (node.isDeleteFolderTask)
-				if (nextSelected)
-					for (const descendantId of node.selectableDescendantTaskIds)
-						if (isDeleteTask(data.nodes[descendantId]))
-							setSelected(selectedTaskIds, descendantId, true, changed);
+			} else if (node.isDeleteFolderTask && nextSelected)
+				for (const descendantId of node.selectableDescendantTaskIds)
+					if (isDeleteTask(data.nodes[descendantId]))
+						setSelected(selectedTaskIds, descendantId, true, changed);
 
 			if (nextSelected && usesCreationCascade(node))
 				for (const ancestorId of node.ancestorCreateFolderTaskIds)

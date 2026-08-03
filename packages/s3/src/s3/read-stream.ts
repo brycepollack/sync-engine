@@ -7,10 +7,6 @@ export type CreateS3ReadStreamOptions = {
 	requestRange: (start: number, endInclusive: number) => Promise<Binary>;
 };
 
-/**
- * Create a ReadableStream from ranged GET requests.
- * Adapted from WebDAV read-stream.ts — identical concurrency/backpressure logic.
- */
 export default function createS3ReadStream({
 	size,
 	chunkSize,
@@ -79,7 +75,7 @@ export default function createS3ReadStream({
 				flush();
 				schedule();
 			})
-			.catch((error) => {
+			.catch((error: unknown) => {
 				if (closed) return;
 				closed = true;
 				controllerRef?.error(error);

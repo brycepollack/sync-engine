@@ -94,7 +94,9 @@ export default function hierarchicalOptimizer({ atoms, executeAtom }: OptimizerI
 				}
 			}
 			await Promise.all(
-				[...dependencies.get(atom)!].map((dependency) => executeAtom(dependency)),
+				[...(dependencies.get(atom) as Set<InputAtom>)].map((dependency) =>
+					executeAtom(dependency),
+				),
 			);
 			return originalExecute();
 		}) as never;

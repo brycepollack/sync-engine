@@ -14,7 +14,7 @@ function merge(params: MergeParams): string {
 }
 
 // --- Content identical ---
-test('local and remote identical content succeeds and is marked identical', async () => {
+test('local and remote identical content succeeds and is marked identical', () => {
 	const params: MergeParams = {
 		a: 'line1\nline2\nline3',
 		b: 'line1\nline2\nline3',
@@ -24,7 +24,7 @@ test('local and remote identical content succeeds and is marked identical', asyn
 });
 
 // --- Simple merge cases ---
-test('local additions merge when remote is unchanged', async () => {
+test('local additions merge when remote is unchanged', () => {
 	const params: MergeParams = {
 		a: 'a\nb\nc',
 		b: 'a\nb',
@@ -33,7 +33,7 @@ test('local additions merge when remote is unchanged', async () => {
 	expect(merge(params)).toBe('a\nb\nc');
 });
 
-test('remote deletions merge when local is unchanged', async () => {
+test('remote deletions merge when local is unchanged', () => {
 	const params: MergeParams = {
 		a: 'a\nb\nc',
 		b: 'a\nc',
@@ -42,7 +42,7 @@ test('remote deletions merge when local is unchanged', async () => {
 	expect(merge(params)).toBe('a\nc');
 });
 
-test('local edits merge when remote is unchanged', async () => {
+test('local edits merge when remote is unchanged', () => {
 	const params: MergeParams = {
 		a: 'hello universe',
 		b: 'hello world',
@@ -51,7 +51,7 @@ test('local edits merge when remote is unchanged', async () => {
 	expect(merge(params)).toBe('hello universe');
 });
 
-test('non-overlapping concurrent edits merge', async () => {
+test('non-overlapping concurrent edits merge', () => {
 	const params: MergeParams = {
 		a: 'line1-local\nline2\nline3\nline4',
 		b: 'line1\nline2\nline3\nline4-remote',
@@ -60,7 +60,7 @@ test('non-overlapping concurrent edits merge', async () => {
 	expect(merge(params)).toBe('line1-local\nline2\nline3\nline4-remote');
 });
 
-test('local edits at start merge', async () => {
+test('local edits at start merge', () => {
 	const params: MergeParams = {
 		a: 'new first line\noriginal line',
 		b: 'original line',
@@ -69,7 +69,7 @@ test('local edits at start merge', async () => {
 	expect(merge(params)).toBe('new first line\noriginal line');
 });
 
-test('remote edits at end merge', async () => {
+test('remote edits at end merge', () => {
 	const params: MergeParams = {
 		a: 'original line',
 		b: 'original line\nnew last line',
@@ -78,7 +78,7 @@ test('remote edits at end merge', async () => {
 	expect(merge(params)).toBe('original line\nnew last line');
 });
 
-test('conflicting edits show conflict', async () => {
+test('conflicting edits show conflict', () => {
 	const params: MergeParams = {
 		a: 'common_prefix\nshared_line_local_version\ncommon_suffix', // Local made a change
 		b: 'common_prefix\nshared_line_remote_version\ncommon_suffix', // Remote also made a change
@@ -89,7 +89,7 @@ test('conflicting edits show conflict', async () => {
 	);
 });
 
-test('conflicting edits can still merge', async () => {
+test('conflicting edits can still merge', () => {
 	const params: MergeParams = {
 		a: '第一行\n本地修改了共同祖先\n第三行\n本地新增行', // 本地修改并添加
 		b: '第一行\n共同祖先被修改了\n第三行', // 远程仅修改
@@ -98,7 +98,7 @@ test('conflicting edits can still merge', async () => {
 	expect(merge(params)).toBe('第一行\n本地修改了共同祖先被修改了\n第三行\n本地新增行');
 });
 
-test('concurrent sentence edits merge', async () => {
+test('concurrent sentence edits merge', () => {
 	const params: MergeParams = {
 		a: 'The fluffy cat sat on the mat.', // User A adds "fluffy"
 		b: 'The cat sat on the rug.', // User B changes "mat" to "rug"
@@ -107,7 +107,7 @@ test('concurrent sentence edits merge', async () => {
 	expect(merge(params)).toBe('The fluffy cat sat on the rug.');
 });
 
-test('edits at both ends of same line merge', async () => {
+test('edits at both ends of same line merge', () => {
 	const params: MergeParams = {
 		a: 'NEW_PREFIX This is a shared line of text.', // User A adds a prefix
 		b: 'This is a shared line of text. NEW_SUFFIX', // User B adds a suffix
@@ -116,7 +116,7 @@ test('edits at both ends of same line merge', async () => {
 	expect(merge(params)).toBe('NEW_PREFIX This is a shared line of text. NEW_SUFFIX');
 });
 
-test('complex interleaved edits merge', async () => {
+test('complex interleaved edits merge', () => {
 	const params: MergeParams = {
 		a: 'Urgent Report for Q1: Sales are significantly up by 10%.',
 		b: 'Report for Q1: Revenue is up by 10%, not sales.',
@@ -127,7 +127,7 @@ test('complex interleaved edits merge', async () => {
 	);
 });
 
-test('long text with non-overlapping edits merge', async () => {
+test('long text with non-overlapping edits merge', () => {
 	const params: MergeParams = {
 		a: `A new introductory sentence has been added locally.
 This is the first sentence of a long paragraph that serves as a base for testing.
@@ -158,7 +158,7 @@ And a concluding sentence has been added remotely.`,
 	);
 });
 
-test('different paragraphs edited independently merge', async () => {
+test('different paragraphs edited independently merge', () => {
 	const params: MergeParams = {
 		a: `Paragraph one, with local modifications.
 It has a few lines, and this is a local addition.
@@ -185,7 +185,7 @@ This one also has some content, and this is a remote addition.`,
 	);
 });
 
-test('large conflicting edits shows many conflicts', async () => {
+test('large conflicting edits shows many conflicts', () => {
 	const params: MergeParams = {
 		a: `The project's primary goal is to revolutionize user interaction.
 We will achieve this by completely overhauling the UI and boosting speed.
@@ -204,7 +204,7 @@ The deadline for this critical phase is <a>two</a><b>strictly four</b> months.`,
 	);
 });
 
-test('paragraph conflict shows merge conflicts', async () => {
+test('paragraph conflict shows merge conflicts', () => {
 	const params: MergeParams = {
 		a: `Paragraph A: Initial content for the first section, with local additions.
 It discusses introductory concepts and some new insights.
@@ -242,7 +242,7 @@ Paragraph C: Concluding remarks and future work, with an added action item.
 This summarizes the document and suggests next steps.`);
 });
 
-test('long Chinese text with non-overlapping edits merge', async () => {
+test('long Chinese text with non-overlapping edits merge', () => {
 	const params: MergeParams = {
 		a: `本地新增了一个引言句。
 这是一段用于测试的长中文段落的第一句话。
@@ -273,7 +273,7 @@ test('long Chinese text with non-overlapping edits merge', async () => {
 	);
 });
 
-test('different Chinese paragraphs edited independently merge', async () => {
+test('different Chinese paragraphs edited independently merge', () => {
 	const params: MergeParams = {
 		a: `段落一，经过本地修改。
 它有几行文字，这是本地新增的内容。
@@ -300,7 +300,7 @@ test('different Chinese paragraphs edited independently merge', async () => {
 	);
 });
 
-test('large Chinese conflicting edits merge', async () => {
+test('large Chinese conflicting edits merge', () => {
 	const params: MergeParams = {
 		a: `项目的主要目标是革新用户交互。
 我们将通过彻底改造用户界面并提升速度来实现。
@@ -317,7 +317,7 @@ test('large Chinese conflicting edits merge', async () => {
 这个关键阶段的截止日期严格限定为<a>两</a><b>四</b>个月。`);
 });
 
-test('Chinese paragraph conflict fails overall merge', async () => {
+test('Chinese paragraph conflict fails overall merge', () => {
 	const params: MergeParams = {
 		a: `段落甲：第一部分的初始内容，附带本地增补。
 它讨论了介绍性的概念和一些新的见解。
@@ -356,7 +356,7 @@ test('Chinese paragraph conflict fails overall merge', async () => {
 });
 
 // --- Markdown-specific test cases ---
-test('markdown non-conflicting edits merge', async () => {
+test('markdown non-conflicting edits merge', () => {
 	const params: MergeParams = {
 		a: `# Section Title
 
@@ -381,7 +381,7 @@ This is the modified paragraph content by remote. It elaborates on the important
 	);
 });
 
-test('markdown list item edits merge', async () => {
+test('markdown list item edits merge', () => {
 	const params: MergeParams = {
 		a: `- First item: locally modified text.
 - Second item: original text.
@@ -400,7 +400,7 @@ test('markdown list item edits merge', async () => {
 	);
 });
 
-test('markdown heading conflict merges', async () => {
+test('markdown heading conflict merges', () => {
 	const params: MergeParams = {
 		a: `## Locally Updated Subheading`,
 		b: `## Remotely Revised Subheading`,
@@ -410,7 +410,7 @@ test('markdown heading conflict merges', async () => {
 	expect(result).toBe('## <a>Locally Updated</a><b>Remotely Revised</b> Subheading');
 });
 
-test('large markdown knowledge-base fragment with non-overlapping edits merge', async () => {
+test('large markdown knowledge-base fragment with non-overlapping edits merge', () => {
 	const params: MergeParams = {
 		a: `# Main Topic: System Architecture
 
@@ -481,7 +481,7 @@ Data flows from Frontend -> API Server -> Database.`,
 	);
 });
 
-test('large markdown knowledge-base fragment with conflicting edits merge', async () => {
+test('large markdown knowledge-base fragment with conflicting edits merge', () => {
 	const params: MergeParams = {
 		a: `# Project Alpha: Guidelines
 
@@ -529,7 +529,7 @@ test('large markdown knowledge-base fragment with conflicting edits merge', asyn
 - All functions must have JSDoc comments.`);
 });
 
-test('Chinese markdown non-conflicting edits merge', async () => {
+test('Chinese markdown non-conflicting edits merge', () => {
 	const params: MergeParams = {
 		a: `# 章节标题
 
@@ -554,7 +554,7 @@ test('Chinese markdown non-conflicting edits merge', async () => {
 	);
 });
 
-test('large Chinese markdown knowledge-base fragment with non-overlapping edits merge', async () => {
+test('large Chinese markdown knowledge-base fragment with non-overlapping edits merge', () => {
 	const params: MergeParams = {
 		a: `# 主题：系统架构
 
@@ -613,7 +613,7 @@ test('large Chinese markdown knowledge-base fragment with non-overlapping edits 
 	);
 });
 
-test('large Chinese markdown knowledge-base fragment with conflicting edits merge', async () => {
+test('large Chinese markdown knowledge-base fragment with conflicting edits merge', () => {
 	const params: MergeParams = {
 		a: `# 项目甲：开发指南
 
@@ -660,7 +660,7 @@ test('large Chinese markdown knowledge-base fragment with conflicting edits merg
 - 所有函数必须有 JSDoc 注释。`);
 });
 
-test('local inserts large text in the middle while remote makes a small tail edit', async () => {
+test('local inserts large text in the middle while remote makes a small tail edit', () => {
 	const params: MergeParams = {
 		a: `# 原始标题
 
@@ -711,7 +711,7 @@ test('local inserts large text in the middle while remote makes a small tail edi
 	);
 });
 
-test('local and remote insert large non-overlapping markdown blocks', async () => {
+test('local and remote insert large non-overlapping markdown blocks', () => {
 	const params: MergeParams = {
 		a: `# 文档标题
 
@@ -806,7 +806,7 @@ function example() {
 	);
 });
 
-test('local long paragraph and remote note at another location merge', async () => {
+test('local long paragraph and remote note at another location merge', () => {
 	const longParagraph = `这是一个极长的段落，模拟用户在 Obsidian 中撰写或粘贴大量文本的场景。这个段落需要足够长，以测试合并算法在处理大块文本时的性能和准确性。它可以包含各种类型的文本，例如详细的解释、复杂的思考过程、或者从其他地方引用的长篇内容。为了达到“极长”的目的，我会在这里重复一些句子，或者添加一些无意义的填充文本。这仅仅是为了增加段落的字符数和行数。在实际应用中，这样的段落通常会包含有价值的信息，但对于测试来说，长度是关键。我们希望确保即使用户进行了如此大规模的单次编辑，合并过程依然能够正确处理，并且不会丢失任何信息，也不会引入错误。这个段落将继续延伸，以确保它确实很长。重复的文本有助于快速增加长度，同时保持一定的可读性（尽管内容上可能没有新增信息）。这个段落现在应该已经足够长了，可以有效地测试我们想要验证的场景。再加几句确保长度。这真的是一个很长的段落，对吧？我们还在继续写，确保它足够长。最后几句了，这个段落的长度应该可以满足测试需求了。`;
 	const params: MergeParams = {
 		a: `# 原始文档
@@ -846,7 +846,7 @@ ${longParagraph}
 	);
 });
 
-test('local large insertion and remote unrelated deletion merge', async () => {
+test('local large insertion and remote unrelated deletion merge', () => {
 	const params: MergeParams = {
 		a: `# 初始文档结构
 
@@ -915,7 +915,7 @@ test('local large insertion and remote unrelated deletion merge', async () => {
 	);
 });
 
-test('nearby large inserts at same location merge', async () => {
+test('nearby large inserts at same location merge', () => {
 	const params: MergeParams = {
 		a: `# 会议纪要
 
@@ -975,7 +975,7 @@ test('nearby large inserts at same location merge', async () => {
 });
 
 // --- Content edge cases ---
-test('concatenate completely different changes', async () => {
+test('concatenate completely different changes', () => {
 	const params: MergeParams = {
 		a: 'local',
 		b: 'remote',
@@ -984,7 +984,7 @@ test('concatenate completely different changes', async () => {
 	expect(merge(params)).toBe(`localremote`);
 });
 
-test('empty base with identical local and remote content succeeds', async () => {
+test('empty base with identical local and remote content succeeds', () => {
 	const params: MergeParams = {
 		a: 'same content',
 		b: 'same content',
@@ -994,7 +994,7 @@ test('empty base with identical local and remote content succeeds', async () => 
 	expect(merge(params)).toBe(`same content`);
 });
 
-test('empty local content fails when base and remote still have content', async () => {
+test('empty local content fails when base and remote still have content', () => {
 	const params: MergeParams = {
 		a: '', // Local deleted everything
 		b: 'some base content\nshared line\nremote additions', // Remote kept base and added
@@ -1003,7 +1003,7 @@ test('empty local content fails when base and remote still have content', async 
 	expect(merge(params)).toBe('remote additions');
 });
 
-test('all-empty content succeeds and is identical', async () => {
+test('all-empty content succeeds and is identical', () => {
 	const params: MergeParams = { a: '', b: '', o: '' };
 	expect(merge(params)).toBe('');
 });

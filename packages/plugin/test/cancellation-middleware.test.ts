@@ -13,20 +13,18 @@ const response = {
 	text: () => 'ok',
 };
 
-test('cancellation middleware rejects before dispatch', async () => {
-	const harness = request(async () => response);
+test('cancellation middleware rejects before dispatch', () => {
+	const harness = request(() => Promise.resolve(response));
 	const wrapped = cancellationMiddleware(harness.request, ref(true));
 
-	expect(wrapped({ url: 'note.md' })).rejects.toMatchObject({
-		message: 'Sync cancelled by user.',
-	});
+	expect(() => wrapped({ url: 'note.md' })).toThrow('Sync cancelled by user.');
 	expect(harness.calls).toStrictEqual([]);
 });
 
 test('cancellation middleware rejects after in-flight response resolves when cancelled', async () => {
 	const isCancelled = ref(false);
 	const responseDeferred = deferred<typeof response>();
-	const harness = request(async () => await responseDeferred.promise);
+	const harness = request(() => responseDeferred.promise);
 	const wrapped = cancellationMiddleware(harness.request, isCancelled);
 
 	const pending = wrapped({ url: 'note.md' });

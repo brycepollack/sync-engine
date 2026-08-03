@@ -6,7 +6,9 @@
 		"perf": "warn",
 		"nursery": "warn",
 		"suspicious": "warn",
-		"style": "warn"
+		"style": "warn",
+		"restriction": "warn",
+		"pedantic": "warn"
 	},
 	"rules": {
 		"typescript/prefer-readonly-parameter-types": "off",
@@ -72,7 +74,52 @@
 		"unicorn/number-literal-case": "off",
 		"eslint/no-multi-assign": "off",
 		"react/jsx-handler-names": "off",
-		"typescript/method-signature-style": ["warn", "property"]
+		"typescript/method-signature-style": ["warn", "property"],
+		"typescript/explicit-module-boundary-types": "off",
+		"typescript/explicit-member-accessibility": ["warn", { "accessibility": "no-public" }],
+		"typescript/explicit-function-return-type": "off",
+		"typescript/promise-function-async": "off",
+		"eslint/no-void": "off",
+		"eslint/no-use-before-define": "off",
+		"unicorn/no-abusive-eslint-disable": "off",
+		"eslint/no-undefined": "off",
+		"oxc/no-optional-chaining": "off",
+		"eslint/no-empty-function": ["warn", { "allow": ["arrowFunctions"] }],
+		"oxc/no-async-await": "off",
+		"oxc/no-rest-spread-properties": "off",
+		"import/no-default-export": "off",
+		"import/no-relative-parent-imports": "off",
+		"unicorn/no-array-for-each": "off",
+		"eslint/default-case": "off",
+		"eslint/no-plusplus": "off",
+		"eslint/no-bitwise": "off",
+		"eslint/no-param-reassign": "off",
+		"eslint/complexity": "off",
+		"typescript/non-nullable-type-assertion-style": "off",
+		"import/unambiguous": "off",
+		"typescript/no-dynamic-delete": "off",
+		"typescript/no-invalid-void-type": "off",
+		"eslint/max-lines-per-function": "off",
+		"unicorn/no-array-callback-reference": "off",
+		"import/max-dependencies": "off",
+		"typescript/no-confusing-void-expression": "off",
+		"eslint/max-classes-per-file": "off",
+		"typescript/strict-boolean-expressions": "off",
+		"eslint/require-unicode-regexp": ["warn", { "requireFlag": "v" }],
+		"typescript/strict-void-return": "off",
+		"unicorn/explicit-length-check": "off",
+		"eslint/max-lines": ["warn", { "max": 500 }],
+		"typescript/prefer-nullish-coalescing": ["warn", { "ignorePrimitives": true }],
+		"unicorn/prefer-query-selector": "off",
+		"eslint/no-inline-comments": "off",
+		"unicorn/prefer-number-coercion": "off",
+		"prefer-promise-reject-errors": "off", // Has TypeScript equivalence
+		"eslint/no-throw-literal": "off", // Officially deprecated
+		"eslint/max-depth": "off",
+		"typescript/switch-exhaustiveness-check": "off",
+		"eslint/no-loop-func": "off",
+		"eslint/radix": "off",
+		"unicorn/import-style": "off"
 	},
 	"env": {
 		"builtin": true,
@@ -89,7 +136,7 @@
 	},
 	"overrides": [
 		{
-			"files": ["test/**/*.ts"],
+			"files": ["*.test.ts"],
 			"plugins": ["unicorn", "typescript", "oxc", "import", "vitest"],
 			"rules": {
 				"jest/prefer-expect-assertions": "off",
@@ -110,7 +157,8 @@
 				"vitest/prefer-called-once": "off",
 				"import/no-namespace": "off",
 				"vitest/prefer-importing-vitest-globals": "off",
-				"vitest/require-hook": "off"
+				"vitest/require-hook": "off",
+				"eslint/max-lines": ["warn", { "max": 2000 }]
 			}
 		}
 	],

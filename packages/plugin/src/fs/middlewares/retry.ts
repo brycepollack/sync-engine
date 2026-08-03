@@ -30,24 +30,24 @@ export default function retryMiddleware(request: Request, options?: RetryOptions
 const RETRYABLE_STATUS_CODES = new Set([401, 408, 425, 429, 500, 502, 503, 504]);
 
 const RETRYABLE_MESSAGE_PATTERNS = [
-	/\bnet::ERR_CONNECTION_CLOSED\b/i,
-	/\bnet::ERR_CONNECTION_RESET\b/i,
-	/\bnet::ERR_CONNECTION_ABORTED\b/i,
-	/\bnet::ERR_CONNECTION_TIMED_OUT\b/i,
-	/\bnet::ERR_NETWORK_CHANGED\b/i,
-	/\bnet::ERR_INTERNET_DISCONNECTED\b/i,
-	/\bECONNRESET\b/i,
-	/\bECONNABORTED\b/i,
-	/\bECONNREFUSED\b/i,
-	/\bETIMEDOUT\b/i,
-	/\bEAI_AGAIN\b/i,
-	/\bsocket hang up\b/i,
-	/\bconnection closed\b/i,
-	/\bconnection reset\b/i,
-	/\bconnection aborted\b/i,
-	/\bconnection refused\b/i,
-	/\btemporarily unavailable\b/i,
-	/\btimed out\b/i,
+	/\bnet::ERR_CONNECTION_CLOSED\b/iv,
+	/\bnet::ERR_CONNECTION_RESET\b/iv,
+	/\bnet::ERR_CONNECTION_ABORTED\b/iv,
+	/\bnet::ERR_CONNECTION_TIMED_OUT\b/iv,
+	/\bnet::ERR_NETWORK_CHANGED\b/iv,
+	/\bnet::ERR_INTERNET_DISCONNECTED\b/iv,
+	/\bECONNRESET\b/iv,
+	/\bECONNABORTED\b/iv,
+	/\bECONNREFUSED\b/iv,
+	/\bETIMEDOUT\b/iv,
+	/\bEAI_AGAIN\b/iv,
+	/\bsocket hang up\b/iv,
+	/\bconnection closed\b/iv,
+	/\bconnection reset\b/iv,
+	/\bconnection aborted\b/iv,
+	/\bconnection refused\b/iv,
+	/\btemporarily unavailable\b/iv,
+	/\btimed out\b/iv,
 ];
 
 function hasRetryableMessage(message: string): boolean {
@@ -70,8 +70,8 @@ function isRetryableError(error: unknown): boolean {
 		const errorLike = current as ErrorLike;
 		const statusCode = getStatus(errorLike);
 		if (statusCode && RETRYABLE_STATUS_CODES.has(statusCode)) return true;
-		if (typeof errorLike.message === 'string')
-			if (hasRetryableMessage(errorLike.message)) return true;
+		if (typeof errorLike.message === 'string' && hasRetryableMessage(errorLike.message))
+			return true;
 		if (errorLike.cause) queue.push(errorLike.cause);
 		if (errorLike.error) queue.push(errorLike.error);
 	}

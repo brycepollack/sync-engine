@@ -1,6 +1,6 @@
 # Request
 
-Sync Engine has two request systems: `Request` for remote HTTP calls and `VaultRequest` for local vault operations. Both support middleware wrappers. For internal request implementation details, see [deep-dive: request](../deep-dive/request) and [deep-dive: request middleware](../deep-dive/request-middleware).
+Sync Engine has two request systems: `Request` for remote HTTP calls and `VaultRequest` for local vault operations. Both support middleware wrappers. For internal request implementation details, see [deep dive: request](../deep-dive/request) and [deep dive: request middleware](../deep-dive/request-middleware).
 
 ## `Request`
 
@@ -9,16 +9,19 @@ Remote HTTP request function. Backends receive a composed `Request` instance in 
 ```ts
 type RequestParam = Omit<RequestUrlParam, 'body'> & { body?: string | Binary };
 
-type Request = (params: RequestParam | string) => Promise<{
+type RequestResponse = {
   text: () => string;
   bytes: () => Binary;
   json: () => General; // untyped JSON
   headers: Record<string, string>;
   status: number;
-}>;
+};
+
+type Request = (params: RequestParam | string) => Promise<RequestResponse>;
 ```
 
 `RequestParam` extends Obsidian's `RequestUrlParam` (minus `body`) with a `body` field accepting `string | Binary`. Passing a plain string instead of a `RequestParam` object uses it as the URL.
+`RequestResponse` is an exported SDK type for the response returned by `Request`.
 
 ## `VaultRequest`
 
@@ -34,15 +37,17 @@ type VaultRequestParam =
   | { method: 'MOVE'; key: string; headers: { destination: string } }
   | { method: 'MKDIR'; key: string }
   | { method: 'EXISTS'; key: string }
-  | { method: 'STAT'; key: string }
-  | { method: 'LIST'; key: string };
+  | { method: 'STAT'; key: string; headers?: { cached?: boolean } }
+  | { method: 'LIST'; key: string; headers?: { cached?: boolean } };
 
 type VaultRequest = <T extends VaultRequestParam>(
   params: T,
 ) => Promise<VaultRequestResponseMap[T['method']]>;
 ```
 
-For the method-to-Obsidian-adapter mapping, see [deep-dive: request](../deep-dive/request#vault-request).
+For the method-to-Obsidian-adapter mapping, see [deep dive: request](../deep-dive/request#vault-request).
+
+`STAT` and `LIST` use cached vault objects by default when the layout is ready. Set `headers.cached` to `false` to bypass those caches and query the vault adapter instead. The option defaults to `true` when omitted.
 
 ## Middleware
 
@@ -59,7 +64,7 @@ type LocalRequestMiddlewareEntry = {
 };
 ```
 
-Returning `undefined` from `apply` declines the entry at that priority. For the built-in middleware (retry, rate limiter, cancellation, custom headers), see [deep-dive: request middleware](../deep-dive/request-middleware).
+Returning `undefined` from `apply` declines the entry at that priority. For the built-in middleware (retry, rate limiter, cancellation, custom headers), see [deep dive: request middleware](../deep-dive/request-middleware).
 
 ### Registering Middleware
 

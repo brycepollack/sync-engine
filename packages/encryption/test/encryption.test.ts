@@ -77,20 +77,20 @@ function createRemote(options: { uid?: string } = {}) {
 	const writeStreamChunks: Array<Binary> = [];
 	const base = testFs({
 		control: {
-			async delete(key) {
+			delete(key) {
 				files.delete(key);
 				directories.delete(key);
 			},
-			async exists(key) {
+			exists(key) {
 				return files.has(key) || directories.has(key);
 			},
-			async list() {
+			list() {
 				return [];
 			},
-			async mkdir(key) {
+			mkdir(key) {
 				directories.add(key);
 			},
-			async move(oldKey, newKey) {
+			move(oldKey, newKey) {
 				const stored = files.get(oldKey);
 				if (stored !== undefined) {
 					files.set(newKey, stored);
@@ -101,18 +101,18 @@ function createRemote(options: { uid?: string } = {}) {
 					directories.delete(oldKey);
 				}
 			},
-			async read(key) {
+			read(key) {
 				return files.get(key) ?? new Uint8Array(0);
 			},
-			async readStream(key) {
+			readStream(key) {
 				return stream([files.get(key) ?? new Uint8Array(0)]);
 			},
-			async stat(key) {
+			stat(key) {
 				if (directories.has(key) || key.endsWith('/')) return { isDir: true, key };
 				const value = files.get(key) ?? new Uint8Array(0);
 				return { isDir: false, key, mtime: 1, size: value.byteLength, uid: `${key}-uid` };
 			},
-			async write(key, value) {
+			write(key, value) {
 				files.set(key, value);
 				return key;
 			},
@@ -138,9 +138,9 @@ function createRemote(options: { uid?: string } = {}) {
 	});
 	const fs = {
 		...base.fs,
-		async writeStream(key: string, value: ReadableStream<Binary>, stat: FileStat) {
+		writeStream(key: string, value: ReadableStream<Binary>, stat: FileStat) {
 			forwardedSizes.push(stat.size);
-			return await base.fs.writeStream(key, value, stat);
+			return base.fs.writeStream(key, value, stat);
 		},
 	} as Fs;
 	return { base, files, forwardedSizes, fs, writeStreamChunks };
@@ -183,8 +183,7 @@ test('readStream decrypts with provided size', async () => {
 	await shim.write('Folder/file.md', plaintext, writeStat);
 	const encryptedKey = must(remote.base.calls.write[0]?.[0], 'missing encrypted key');
 	const encrypted = must(remote.files.get(encryptedKey), 'missing encrypted payload');
-	remote.base.control.readStream = async () =>
-		stream(splitBinary(encrypted, [1, 7, 3, 64, 4096]));
+	remote.base.control.readStream = () => stream(splitBinary(encrypted, [1, 7, 3, 64, 4096]));
 
 	expect(remote.base.calls.stat).toStrictEqual([]);
 	const readStat = file('Folder/file.md', { size: encrypted.byteLength });
@@ -202,7 +201,7 @@ test('readStream handles arbitrary source boundaries', async () => {
 	await shim.write('Folder/file.md', plaintext, writeStat);
 	const encryptedKey = must(remote.base.calls.write[0]?.[0], 'missing encrypted key');
 	const encrypted = must(remote.files.get(encryptedKey), 'missing encrypted payload');
-	remote.base.control.readStream = async () =>
+	remote.base.control.readStream = () =>
 		stream(splitBinary(encrypted, [1, 7, 3, 4096, 11, 8192]));
 
 	const readStat = file('Folder/file.md', { size: encrypted.byteLength });
@@ -233,7 +232,7 @@ test('writeStream encrypts round trip and forwards encrypted size', async () => 
 test('stat and list preserve metadata while decrypting keys', async () => {
 	const remote = createRemote();
 	const shim = encryptionWrapper(remote.fs, { memoryDB, password: PASSWORD });
-	remote.base.control.stat = async (key) => ({
+	remote.base.control.stat = (key) => ({
 		isDir: false,
 		key,
 		mtime: 1234,
@@ -244,7 +243,7 @@ test('stat and list preserve metadata while decrypting keys', async () => {
 	await shim.write('Folder/file.md', bytes('x'), file('Folder/file.md', { size: 1 }));
 	const folderKey = must(remote.base.calls.mkdir[0], 'missing encrypted folder key');
 	const fileKey = must(remote.base.calls.write[0]?.[0], 'missing encrypted file key');
-	remote.base.control.list = async () => [
+	remote.base.control.list = () => [
 		{ isDir: true, key: folderKey },
 		{ isDir: false, key: fileKey, mtime: 12, size: 7, uid: 'note-2' },
 	];
@@ -264,17 +263,17 @@ test('exists delete mkdir and move rewrite keys', async () => {
 	const remote = createRemote();
 	const shim = encryptionWrapper(remote.fs, { memoryDB, password: PASSWORD });
 	const calls: Array<[string, string?]> = [];
-	remote.base.control.exists = async (key) => {
+	remote.base.control.exists = (key) => {
 		calls.push([key]);
 		return true;
 	};
-	remote.base.control.delete = async (key) => {
+	remote.base.control.delete = (key) => {
 		calls.push([key]);
 	};
-	remote.base.control.mkdir = async (key) => {
+	remote.base.control.mkdir = (key) => {
 		calls.push([key]);
 	};
-	remote.base.control.move = async (oldKey, newKey) => {
+	remote.base.control.move = (oldKey, newKey) => {
 		calls.push([oldKey, newKey]);
 	};
 
@@ -346,8 +345,8 @@ test('wrong password and malformed content fail to decrypt', async () => {
 
 	const wrong = createRemote();
 	const wrongShim = encryptionWrapper(wrong.fs, { memoryDB, password: WRONG_PASSWORD });
-	wrong.base.control.read = async () => encrypted;
-	wrong.base.control.stat = async (key) => ({
+	wrong.base.control.read = () => encrypted;
+	wrong.base.control.stat = (key) => ({
 		isDir: false,
 		key,
 		mtime: 1,
@@ -356,7 +355,7 @@ test('wrong password and malformed content fail to decrypt', async () => {
 	});
 
 	expect(wrongShim.read('Folder/file.md', stat)).rejects.toThrow(DECRYPTION_ERROR_MESSAGE);
-	wrong.base.control.read = async () => new Uint8Array(1);
+	wrong.base.control.read = () => new Uint8Array(1);
 	expect(wrongShim.read('Folder/file.md', stat)).rejects.toThrow(DECRYPTION_ERROR_MESSAGE);
 });
 

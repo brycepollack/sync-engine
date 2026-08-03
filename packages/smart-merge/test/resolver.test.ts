@@ -31,8 +31,8 @@ beforeEach(() => {
 });
 
 test('resolver should merge when base text exists', async () => {
-	const local = fs({ control: { read: async () => bytes('line1-local\nline2\nline3') } });
-	const remote = fs({ control: { read: async () => bytes('line1\nline2\nline3-remote') } });
+	const local = fs({ control: { read: () => bytes('line1-local\nline2\nline3') } });
+	const remote = fs({ control: { read: () => bytes('line1\nline2\nline3-remote') } });
 	const resolver = smartMergeResolver(mergeOptions, db, () => 'namespace');
 	await db.getStore('base-text-namespace').set('note.md', 'line1\nline2\nline3');
 
@@ -55,7 +55,7 @@ test('resolver should merge when base text exists', async () => {
 });
 
 test('resolver should fall back when base text is missing', async () => {
-	const local = fs({ control: { read: async () => bytes('local wins') } });
+	const local = fs({ control: { read: () => bytes('local wins') } });
 	const remote = fs();
 	const resolver = smartMergeResolver(mergeOptions, db, () => 'namespace');
 
@@ -78,7 +78,7 @@ test('resolver should fall back when base text is missing', async () => {
 
 test('resolver should stream remote fallback for large newer remote files', async () => {
 	const local = fs();
-	const remote = fs({ control: { readStream: async () => stream(['remote wins']) } });
+	const remote = fs({ control: { readStream: () => stream(['remote wins']) } });
 	const resolver = smartMergeResolver(mergeOptions, db, () => 'namespace');
 	const remoteStat = file('large.md', { mtime: 10, size: 2 ** 22, uid: 'remote-current' });
 

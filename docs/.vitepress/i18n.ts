@@ -35,6 +35,7 @@ const en = {
 	registration: 'Registration',
 	request: 'Request',
 	requestMiddleware: 'RequestMiddleware',
+	s3: 'S3',
 	security: 'Security',
 	settings: 'Settings',
 	sideDescription: 'Next-generation syncing plugin for Obsidian.',

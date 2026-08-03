@@ -1,14 +1,13 @@
 // oxlint-disable import/no-nodejs-modules
 import type { ThemeConfig } from 'vitepress-theme-trito';
-import { lstatSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { lstatSync } from 'node:fs';
+import { resolve } from 'node:path';
 import canvas from 'vite-plugin-json-canvas';
 import { defineConfig } from 'vitepress';
 import { configGenerator } from './i18n';
 
 function p(path: string) {
-	return resolve(dirname(fileURLToPath(import.meta.url)), '..', path);
+	return resolve(import.meta.dirname, '..', path);
 }
 
 const srcDir = p('src/pages');
@@ -16,7 +15,7 @@ const preserveMarkdownSymlinks = {
 	enforce: 'pre',
 	name: 'preserve-markdown-symlinks',
 	resolveId(id: string) {
-		const [requestPath, suffix = ''] = id.split(/(?<suffix>[?#].*)/, 2);
+		const [requestPath, suffix = ''] = id.split(/(?<suffix>[?#].*)/v, 2);
 		const path = requestPath.startsWith(srcDir)
 			? requestPath
 			: requestPath.startsWith('/')
@@ -24,7 +23,9 @@ const preserveMarkdownSymlinks = {
 				: requestPath;
 		try {
 			if (path.endsWith('.md') && lstatSync(path).isSymbolicLink()) return `${path}${suffix}`;
-		} catch {}
+		} catch {
+			// Swallow file system errors
+		}
 	},
 };
 
@@ -150,6 +151,7 @@ const localeConfig = configGenerator<ThemeConfig>((t) => {
 							collapsed: true,
 							items: [
 								{ link: `${deepDive}/modules/webdav`, text: t('webdav') },
+								{ link: `${deepDive}/modules/s3`, text: t('s3') },
 								{ link: `${deepDive}/modules/encryption`, text: t('encryption') },
 								{ lint: `${deepDive}/modules/smart-marge`, text: t('smartMerge') },
 							],

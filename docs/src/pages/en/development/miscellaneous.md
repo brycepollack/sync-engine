@@ -4,13 +4,34 @@
 
 ### Root runtime exports
 
-| Export           | Description                                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `digOriginal`    | Unwraps nested wrappers to root filesystem. See [file system](./file-system#digoriginal).           |
-| `MigrationModal` | Modal for migration confirmations. See [file system](./file-system#migrationmodal).                 |
-| `pipe`           | Transfer a file between two filesystems with auto-streaming. See [file system](./file-system#pipe). |
-| `readWithSize`   | Read a file with auto-streaming by size threshold. See [file system](./file-system#readwithsize).   |
-| `writeWithValue` | Write a value with auto-streaming by input type. See [file system](./file-system#writewithvalue).   |
+| Export             | Description                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `digOriginal`      | Unwraps nested wrappers to root filesystem. See [file system](./file-system#digoriginal).           |
+| `prefixWrapper`    | Exposes a prefixed directory as an `Fs` root. See [file system](./file-system#prefixwrapper).       |
+| `setNeedMigration` | Adds migration confirmation behavior to a setting toggle.                                           |
+| `pipe`             | Transfer a file between two filesystems with auto-streaming. See [file system](./file-system#pipe). |
+| `readWithSize`     | Read a file with auto-streaming by size threshold. See [file system](./file-system#readwithsize).   |
+| `writeWithValue`   | Write a value with auto-streaming by input type. See [file system](./file-system#writewithvalue).   |
+
+### `setNeedMigration`
+
+`setNeedMigration` adds migration confirmation behavior to an Obsidian `ToggleComponent`. It is useful for settings whose existing value changes the remote file layout or representation.
+
+```ts
+import { setNeedMigration } from '@hesprs/sync-engine-sdk';
+
+setNeedMigration(ctx, {
+  toggle,
+  needMigration: (value) => recordStoreExists(),
+  content: (value) => (value ? 'Encryption will be enabled.' : 'Encryption will be disabled.'),
+  apply: async (value) => {
+    settings.enabled = value;
+    await ctx.saveSettings();
+  },
+});
+```
+
+When `needMigration` returns false or is omitted, `apply` runs immediately. When it returns true, the toggle is reverted until the user either starts migration or chooses to toggle without migration. The helper is the public API; its internal migration modal is not exported.
 
 ### `/dev` runtime exports
 
@@ -33,7 +54,7 @@
 | Sync                 | `TaskNames`, `BaseTask`, `AddRecord`, `RemoveRecord`, `Download`, `Upload`, `CreateLocalDir`, `CreateRemoteDir`, `RemoveLocal`, `RemoveRemote`, `MoveLocal`, `MoveRemote`, `ResolveConflict`, `TaskFactory`, `DeciderInput`, `Decider`, `ConflictResolver`, `ConflictResolverPayload`, `SyncTerminateReason` |
 | Storage              | `RecordStore`, `StoreAsync`, `StoreSync`, `DatabaseAsync`, `DatabaseSync`                                                                                                                                                                                                                                    |
 | Modules              | `ModuleMeta`, `AugmentedModuleMeta`                                                                                                                                                                                                                                                                          |
-| Request              | `VaultRequest`, `RequestParam` (inferable from `Request`)                                                                                                                                                                                                                                                    |
+| Request              | `VaultRequest`, `RequestParam`, `RequestResponse` (the response type returned by `Request`)                                                                                                                                                                                                                  |
 | Internationalization | `ObsidianLanguageCode`, `Fragment`, `TranslationResource`, `Translate`                                                                                                                                                                                                                                       |
 | Other                | `ExistingMemoryDB`                                                                                                                                                                                                                                                                                           |
 

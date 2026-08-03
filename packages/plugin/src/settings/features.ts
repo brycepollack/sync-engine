@@ -2,7 +2,7 @@ import type { Settings, Context } from '@';
 import { Setting } from 'obsidian';
 import type { MigrationModalTranslations } from '@/components/MigrationModal';
 import type { Fragment, Translate } from '@/modules/I18n';
-import MigrationModal from '@/components/MigrationModal';
+import setNeedMigration from '@/components/MigrationModal';
 import { generateSettingEntry } from './generate-entry';
 
 export type FeaturesSettingTranslations = {
@@ -98,36 +98,19 @@ export default function featuresSettings(
 			}),
 		);
 
-	let selfTrigger = false;
 	new Setting(el)
 		.setName(translate('asymmetricStorage'))
 		.setDesc(translate('asymmetricStorageDescription'))
 		.addToggle((toggle) =>
-			toggle.setValue(settings.asymmetricStorage).onChange((value) => {
-				if (selfTrigger) {
-					selfTrigger = false;
-					return;
-				}
-				const original = settings.asymmetricStorage;
-				void recordStoreExists().then((exist) => {
-					if (exist)
-						new MigrationModal(ctx as Context, {
-							apply: () => {
-								settings.asymmetricStorage = value;
-								void saveSettings();
-							},
-							content: translate(
-								'asymmetricStorageMigration',
-								value ? 'enable' : 'disable',
-							),
-							onCancel: () => {
-								settings.asymmetricStorage = original;
-								void saveSettings();
-								selfTrigger = true;
-								toggle.setValue(original);
-							},
-						}).open();
-				});
+			setNeedMigration(ctx as Context, {
+				apply: (value) => {
+					settings.asymmetricStorage = value;
+					void saveSettings();
+				},
+				content: (value) =>
+					translate('asymmetricStorageMigration', value ? 'enable' : 'disable'),
+				needMigration: () => recordStoreExists(),
+				toggle: toggle.setValue(settings.asymmetricStorage),
 			}),
 		);
 }

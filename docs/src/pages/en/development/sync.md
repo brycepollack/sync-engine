@@ -1,6 +1,6 @@
 # Sync
 
-Sync Engine's sync pipeline is extensible at three points: remote listing, decision-making, and conflict resolution. For the internal sync pipeline architecture, see [deep-dive: sync](../deep-dive/sync).
+Sync Engine's sync pipeline is extensible at three points: remote listing, decision-making, and conflict resolution. For the internal sync pipeline architecture, see [deep dive: sync](../deep-dive/sync).
 
 ## Remote Lister
 
@@ -17,7 +17,7 @@ type RemoteListerEntry = {
 };
 ```
 
-`Infras` is `{ localFs: Fs; remoteFs: Fs; record: RecordStore }`. The `reporter` must be passed through to `remoteFs.list()` calls. For how listers integrate with the sync flow, see [deep-dive: sync](../deep-dive/sync#remote-lister).
+`Infras` is `{ localFs: Fs; remoteFs: Fs; record: RecordStore }`. The `reporter` must be passed through to `remoteFs.list()` calls. For how listers integrate with the sync flow, see [deep dive: sync](../deep-dive/sync#remote-lister).
 
 ### Registering a Lister
 
@@ -39,7 +39,7 @@ type DeciderInput = {
 type Decider = (input: DeciderInput) => Array<BaseTask>;
 ```
 
-Use `taskFactory` instead of constructing task classes directly — their constructors require internal sync infrastructure. For the built-in bidirectional decider logic, see [deep-dive: sync](../deep-dive/sync#decider).
+Use `taskFactory` instead of constructing task classes directly — their constructors require internal sync infrastructure. For the built-in bidirectional decider logic, see [deep dive: sync](../deep-dive/sync#decider).
 
 Example: [bidirectional decider](https://github.com/hesprs/sync-engine/blob/main/packages/plugin/src/sync/decision/bidirectional.ts).
 

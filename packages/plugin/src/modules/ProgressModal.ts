@@ -49,14 +49,12 @@ export default class ProgressModal extends Modal {
 				if (trigger === 'manual') this.open();
 				this.renderHideStop();
 			}),
-			ctx.on('executionStarted', () => {
-				failedTasks.length = 0;
-				this.renderHideStop();
-			}),
+			ctx.on('executionStarted', this.renderHideStop),
 			ctx.on('taskFailed', (task) => failedTasks.push(task)),
 			ctx.on('syncTerminated', () => {
 				this.renderDone();
-				if (failedTasks.length === 0) return;
+				if (!failedTasks.length) return;
+				failedTasks.length = 0;
 				if (!this.opening) {
 					this.open();
 					this.renderDone();
@@ -244,7 +242,7 @@ export default class ProgressModal extends Modal {
 						percent: 100,
 						total: 0,
 					};
-				else return { current: this.t('failed') };
+				return { current: this.t('failed') };
 			},
 			{ deps: [this.ctx.walkProgress, this.ctx.syncStage, this.ctx.executionProgress] },
 		);
@@ -271,10 +269,6 @@ export default class ProgressModal extends Modal {
 		this.opening = true;
 	}
 
-	private readonly cleanup = (callbacks: Array<() => void>) => {
-		while (callbacks.length) callbacks.shift()?.();
-	};
-
 	root = {
 		hideProgress: this.close.bind(this),
 		showProgress: () => {
@@ -295,6 +289,6 @@ export default class ProgressModal extends Modal {
 
 	dispose() {
 		this.onClose();
-		this.cleanup(this.moduleCleanupCallbacks);
+		this.moduleCleanupCallbacks.splice(0).forEach((fn) => fn());
 	}
 }

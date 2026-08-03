@@ -9,7 +9,7 @@ function assertNotCancelled(isCancelled: Ref<boolean>) {
 
 class CancellationFs implements WrappedFs {
 	constructor(
-		public readonly original: Fs,
+		readonly original: Fs,
 		private readonly isCancelled: Ref<boolean>,
 	) {}
 
@@ -71,7 +71,7 @@ class CancellationFs implements WrappedFs {
 export function cancellationMiddleware<
 	T extends (...args: ReadonlyArray<General>) => Promise<General>,
 >(request: T, isCancelled: Ref<boolean>): T {
-	return (async (...params: Parameters<T>) => {
+	return ((...params: Parameters<T>) => {
 		assertNotCancelled(isCancelled);
 		const promise = new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
 			const unsub = isCancelled.subscribe((cancelled) => {

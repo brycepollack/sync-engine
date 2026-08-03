@@ -7,7 +7,7 @@ import * as sleepModule from '@/utils/sleep';
 const { bytes, request } = testKit;
 const sleepSpy = spyOn(sleepModule, 'default').mockImplementation(() => Promise.resolve());
 
-test('retry middleware retries retryable request and waits between attempts', async () => {
+test('retry middleware retries retryable request and waits between attempts', () => {
 	sleepSpy.mockClear();
 	const response = {
 		bytes: () => bytes('ok'),
@@ -17,10 +17,11 @@ test('retry middleware retries retryable request and waits between attempts', as
 		text: () => 'ok',
 	};
 	let attempts = 0;
-	const harness = request(async () => {
+	const harness = request(() => {
 		attempts += 1;
+		// oxlint-disable-next-line typescript/only-throw-error
 		if (attempts < 3) throw { res: { status: 503 } };
-		return response;
+		return Promise.resolve(response);
 	});
 	const wrapped = retryMiddleware(harness.request, { maxRetry: 2, retryDelay: () => 25 });
 
@@ -35,9 +36,10 @@ test('retry middleware retries retryable request and waits between attempts', as
 	expect(sleepSpy).toHaveBeenNthCalledWith(2, 25);
 });
 
-test('retry middleware stops on non-retryable error', async () => {
+test('retry middleware stops on non-retryable error', () => {
 	sleepSpy.mockClear();
-	const harness = request(async () => {
+	const harness = request(() => {
+		// oxlint-disable-next-line typescript/only-throw-error
 		throw { res: { status: 404 } };
 	});
 	const wrapped = retryMiddleware(harness.request, {

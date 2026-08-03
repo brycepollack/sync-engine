@@ -5,7 +5,7 @@ export default function handleInput<T, K extends string>({
 	text,
 	saveSettings,
 	processValue,
-	stringify = (value: T) => String(value),
+	stringify = String,
 	key,
 	settings,
 	invalidValue,

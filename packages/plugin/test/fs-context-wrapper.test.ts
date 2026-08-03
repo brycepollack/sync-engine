@@ -53,7 +53,7 @@ beforeEach(() => {
 	db.setMeta('lastRemoteContextUid', '');
 });
 
-test('remote context wrapper clears stale context when uid changes at creation', async () => {
+test('remote context wrapper clears stale context when uid changes at creation', () => {
 	const remote = fs({ uid: 'new-remote' });
 	getRemoteStore().set('stale.md', file('stale.md'));
 	getLocalStore().set('keep.md', file('keep.md'));
@@ -66,7 +66,7 @@ test('remote context wrapper clears stale context when uid changes at creation',
 	expect(db.getMeta('lastRemoteContextUid')).toBe('new-remote');
 });
 
-test('remote context wrapper keeps context when uid matches at creation', async () => {
+test('remote context wrapper keeps context when uid matches at creation', () => {
 	const remote = fs({ uid: 'same-remote' });
 	getRemoteStore().set('keep.md', file('keep.md'));
 	db.setMeta('lastRemoteContextUid', 'same-remote');
@@ -77,7 +77,7 @@ test('remote context wrapper keeps context when uid matches at creation', async 
 	expect(db.getMeta('lastRemoteContextUid')).toBe('same-remote');
 });
 
-test('local context wrapper clears stale context when uid changes at creation', async () => {
+test('local context wrapper clears stale context when uid changes at creation', () => {
 	const local = fs({ uid: 'new-local' });
 	getLocalStore().set('stale.md', file('stale.md'));
 	getRemoteStore().set('keep.md', file('keep.md'));
@@ -97,8 +97,8 @@ test('stat caches returned file stat', async () => {
 	const localWrapper = localContextWrapper(local.fs);
 	const remoteResult = file('remote.md', { size: 7, uid: 'remote-file' });
 	const localResult = file('local.md', { size: 9, uid: 'local-file' });
-	remote.control.stat = async () => remoteResult;
-	local.control.stat = async () => localResult;
+	remote.control.stat = () => remoteResult;
+	local.control.stat = () => localResult;
 
 	await remoteWrapper.stat('remote.md');
 	await localWrapper.stat('local.md');
@@ -122,8 +122,8 @@ test('list replaces previous context snapshot', async () => {
 	];
 	getRemoteStore().set('old-remote.md', file('old-remote.md'));
 	getLocalStore().set('old-local.md', file('old-local.md'));
-	remote.control.list = async () => remoteStats;
-	local.control.list = async () => localStats;
+	remote.control.list = () => remoteStats;
+	local.control.list = () => localStats;
 
 	await remoteWrapper.list('/', () => 'include');
 	await localWrapper.list('/', () => 'include');
@@ -138,7 +138,7 @@ test('list replaces previous context snapshot', async () => {
 	});
 });
 
-test('stat and traversal failures do not mutate context', async () => {
+test('stat and traversal failures do not mutate context', () => {
 	const remote = fs();
 	const local = fs();
 	const remoteWrapper = remoteContextWrapper(remote.fs);
@@ -147,18 +147,10 @@ test('stat and traversal failures do not mutate context', async () => {
 	const localSeed = file('seed-local.md', { size: 4, uid: 'seed-local' });
 	getRemoteStore().set(remoteSeed.key, remoteSeed);
 	getLocalStore().set(localSeed.key, localSeed);
-	remote.control.stat = async () => {
-		throw new Error('remote stat failed');
-	};
-	remote.control.list = async () => {
-		throw new Error('remote list failed');
-	};
-	local.control.stat = async () => {
-		throw new Error('local stat failed');
-	};
-	local.control.list = async () => {
-		throw new Error('local list failed');
-	};
+	remote.control.stat = () => Promise.reject(new Error('remote stat failed'));
+	remote.control.list = () => Promise.reject(new Error('remote list failed'));
+	local.control.stat = () => Promise.reject(new Error('local stat failed'));
+	local.control.list = () => Promise.reject(new Error('local list failed'));
 
 	expect(remoteWrapper.stat('remote.md')).rejects.toThrow('remote stat failed');
 	expect(remoteWrapper.list('/', () => 'include')).rejects.toThrow('remote list failed');

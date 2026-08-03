@@ -309,15 +309,14 @@ export function diffMerge<T>(
 		} satisfies ConflictIndex;
 
 		if (conflict.a[1] > 0 || conflict.o[1] > 0 || conflict.b[1] > 0)
-			if (!isTrueConflict(conflict))
-				pushOk(conflict.a, conflict.o, conflict.b, a, conflict.a);
-			else
+			if (isTrueConflict(conflict))
 				pushChunk({
 					a: slice(a, conflict.a),
 					b: slice(b, conflict.b),
 					o: slice(o, conflict.o),
 					type: 'conflict',
 				});
+			else pushOk(conflict.a, conflict.o, conflict.b, a, conflict.a);
 
 		const suffix: Span = [x.a[0] + aLength - suffixLength, suffixLength];
 		if (suffixLength > 0)

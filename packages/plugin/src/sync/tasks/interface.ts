@@ -54,17 +54,6 @@ export abstract class BaseTask<T extends TaskOptions = TaskOptions> {
 	abstract exec(): MaybePromise<void>;
 }
 
-export class TaskError extends Error {
-	constructor(
-		message: string,
-		readonly task: BaseTask,
-		readonly cause?: Error,
-	) {
-		super(message);
-		this.name = 'TaskError';
-	}
-}
-
 const RED_COLOR = 'var(--color-red)';
 const BLUE_COLOR = 'var(--color-blue)';
 const YELLOW_COLOR = 'var(--color-yellow)';

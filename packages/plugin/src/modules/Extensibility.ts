@@ -16,6 +16,8 @@ import type { Dispatch } from './EventBus';
 import type { Translate } from './I18n';
 import { VERSION } from './EventBus';
 
+type WindowAugmentation = { syncEngineApiBridge?: typeof obsidian };
+
 export type ModuleInstance = {
 	moduleSettings: object;
 	dispose?: () => void;
@@ -79,7 +81,7 @@ export default class Extensibility {
 		},
 	) {
 		this.moduleDir = `${ctx.app.vault.configDir}/plugins/sync-engine/modules`;
-		(window as General).syncEngineApiBridge = obsidian;
+		(window as unknown as WindowAugmentation).syncEngineApiBridge = obsidian;
 		this.moduleStore = ctx.indexedDB.getStore(`modules-${hash(ctx.app.vault.getName())}`);
 	}
 
@@ -144,7 +146,10 @@ export default class Extensibility {
 		for (const id of new Set([...foundModules, ...recordedModules.keys()])) {
 			const meta = recordedModules.get(id);
 			if (!foundModules.has(id)) factory.store({ key: id, type: 'delete' });
-			else if (!meta)
+			else if (meta) {
+				this.discoveredModules.set(id, meta);
+				if (meta.enabled) factory.load(meta);
+			} else
 				new UnknownModuleModal(this.ctx, {
 					id,
 					onSave: async (newMeta) => {
@@ -156,10 +161,6 @@ export default class Extensibility {
 					},
 					path: this.getModulePath(id),
 				}).open();
-			else {
-				this.discoveredModules.set(id, meta);
-				if (meta.enabled) factory.load(meta);
-			}
 		}
 		await execute();
 	};
@@ -181,7 +182,7 @@ export default class Extensibility {
 				...(module ? { module } : { path: this.getModulePath(id) }),
 			});
 			__addModule__(ctor);
-			const instance: ModuleInstance = __getModule__(ctor);
+			const instance: ModuleInstance = __getModule__(ctor as never);
 			const modules = this.settings.modules;
 			const moduleSettings = modules[id];
 			if (moduleSettings) {
@@ -212,7 +213,7 @@ export default class Extensibility {
 		const ctor = this.loadedModules.get(id);
 		if (!ctor) return;
 		const { __getModule__, dispatch, allModules } = this.ctx;
-		const instance: ModuleInstance = __getModule__(ctor as General);
+		const instance: ModuleInstance = __getModule__(ctor as never);
 		instance.dispose?.();
 		this.loadedModules.delete(id);
 		allModules.delete(ctor);
@@ -263,13 +264,13 @@ export default class Extensibility {
 	private readonly fetchSources = async (manual = false) => {
 		const { dispatch, translate } = this.ctx;
 		const { moduleSources } = this.settings;
-		const modules = Array<AugmentedModuleMeta>();
+		const modules: Array<AugmentedModuleMeta> = [];
 		const fetchSingleSource = async (url: string): Promise<Array<unknown>> => {
 			try {
-				const content = await requestUrl(url).json;
+				const content: unknown = await requestUrl(url).json;
 				if (!Array.isArray(content)) throw new Error('Wrong source schema!');
 				this.sourceCache.set(url, content);
-				return content;
+				return content as Array<unknown>;
 			} catch (error) {
 				const message = toErrorMessage(error);
 				dispatch('errorGeneral', `Failed to fetch source from \`${url}\`: ${message}`);
@@ -357,7 +358,7 @@ export default class Extensibility {
 
 	readonly dispose = () => {
 		window.clearTimeout(this.autoUpdateTimeout);
-		delete (window as General).syncEngineApiBridge;
+		delete (window as unknown as WindowAugmentation).syncEngineApiBridge;
 		this.loadedModules.clear();
 	};
 
@@ -392,9 +393,9 @@ function isValidMeta(meta: unknown): meta is ModuleMeta {
 	};
 	if (!isMetaShape(meta)) return false;
 	return (
-		!/[<>:"/\\|?*]/.test(meta.id) &&
+		!/[<>:"\/\\\|?*]/v.test(meta.id) &&
 		meta.integrity.length === 64 &&
-		/^[0-9a-f]*$/.test(meta.integrity)
+		/^[0-9a-f]*$/v.test(meta.integrity)
 	);
 }
 

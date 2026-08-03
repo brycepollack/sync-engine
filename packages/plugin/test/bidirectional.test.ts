@@ -1,6 +1,6 @@
 import testKit from '$/test-kit';
 import { expect, test } from 'bun:test';
-import type { BaseTask, TaskNames } from '@/sync';
+import type { TaskFactory, TaskNames, TaskOptions } from '@/sync';
 import type { FileStat, RecordStat, RecordStatsMap, Stat, StatsMap } from '@/types';
 import { bidirectionalDecider, taskMap } from '@/sync';
 
@@ -18,7 +18,7 @@ function folderRecord(): RecordStat {
 	return { isDir: true };
 }
 
-const NOOP = () => undefined;
+const NOOP = () => {};
 
 const VOID = {} as never;
 
@@ -29,12 +29,6 @@ type ExtractedTask = {
 	remote?: Stat;
 };
 
-/**
- * Runs the decider with a real `taskFactory` that instantiates actual task
- * classes. This is needed because `isChanged` uses `instanceof
- * Upload/Download/ResolveConflict` for folder change detection via the shared
- * `tasks` array.
- */
 function runDecider(input: {
 	localStats?: StatsMap;
 	remoteStats?: StatsMap;
@@ -45,8 +39,8 @@ function runDecider(input: {
 	const records = input.records ?? new Map<string, RecordStat>();
 	const captured: Array<ExtractedTask> = [];
 
-	const taskFactory = ((name: TaskNames, options: any): BaseTask => {
-		const TaskCtor = (taskMap as any)[name] as new (opts: any) => BaseTask;
+	const taskFactory = ((name: TaskNames, options: TaskOptions) => {
+		const TaskCtor = taskMap[name];
 		const task = new TaskCtor({
 			...options,
 			localFs: VOID,
@@ -62,7 +56,7 @@ function runDecider(input: {
 			...(options.remote !== undefined && { remote: options.remote }),
 		});
 		return task;
-	}) as any;
+	}) as TaskFactory;
 
 	bidirectionalDecider({ localStats, logger: NOOP, records, remoteStats, taskFactory });
 

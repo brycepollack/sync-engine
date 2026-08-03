@@ -21,7 +21,7 @@ function makeTask(input: { name: TaskNames; key: string; local?: Stat; remote?: 
 		remoteFs: {},
 	};
 	return {
-		exec: () => undefined,
+		exec: () => {},
 		key: input.key,
 		local: input.local,
 		name: input.name,
@@ -82,7 +82,9 @@ test('keeps folder tasks when child basenames change', () => {
 		'createLocalDir',
 		'moveLocal',
 	]);
-	expect(oldKey(result.find((task) => task.name === 'moveLocal')!)).toBe('old/note.md');
+	expect(oldKey(result.find((task) => task.name === 'moveLocal') as BaseTask)).toBe(
+		'old/note.md',
+	);
 });
 
 test('collapses nested folders while retaining child moves', () => {

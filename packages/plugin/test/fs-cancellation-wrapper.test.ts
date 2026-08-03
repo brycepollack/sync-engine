@@ -6,7 +6,7 @@ import { syncCancelledError } from '@/sync';
 
 const { bytes, deferred, file, flush, fs, stream } = testKit;
 
-test('cancellation wrapper rejects read before delegation', async () => {
+test('cancellation wrapper rejects read before delegation', () => {
 	const harness = fs();
 	const wrapper = cancellationWrapper(harness.fs, ref(true));
 
@@ -17,7 +17,7 @@ test('cancellation wrapper rejects read before delegation', async () => {
 test('cancellation wrapper rejects write after resolution when cancelled', async () => {
 	const isCancelled = ref(false);
 	const writeDeferred = deferred<string>();
-	const harness = fs({ control: { write: async () => await writeDeferred.promise } });
+	const harness = fs({ control: { write: () => writeDeferred.promise } });
 	const wrapper = cancellationWrapper(harness.fs, isCancelled);
 	const noteStat = file('note.md');
 
@@ -33,7 +33,7 @@ test('cancellation wrapper rejects write after resolution when cancelled', async
 test('cancellation wrapper rejects writeStream after resolution when cancelled', async () => {
 	const isCancelled = ref(false);
 	const writeDeferred = deferred<string>();
-	const harness = fs({ control: { writeStream: async () => await writeDeferred.promise } });
+	const harness = fs({ control: { writeStream: () => writeDeferred.promise } });
 	const wrapper = cancellationWrapper(harness.fs, isCancelled);
 	const streamStat = file('stream.md');
 

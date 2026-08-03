@@ -36,7 +36,7 @@ class ContextFs<S extends string, M extends string> implements WrappedFs {
 	private readonly store: StoreSync<Stat>;
 
 	constructor(
-		public readonly original: Fs,
+		readonly original: Fs,
 		{ db, marker, store }: ContextOptions<S, M>,
 	) {
 		const uid = original.getUid();

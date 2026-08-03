@@ -1,6 +1,6 @@
 import type { WebdavSettings } from '@';
 import type { Translate, Translations } from '@hesprs/sync-engine-sdk';
-import { normalizeBaseDir } from '@repo/shared/path';
+import { normalizeBaseDir, normalizeUrl } from '@repo/shared/path';
 import { App, SecretComponent, Setting } from 'obsidian';
 import handleInput from './handle-input';
 
@@ -45,14 +45,11 @@ export default function webdavSetting(
 				invalidValue,
 				key: 'endpoint',
 				processValue: (value) => {
-					let parsedUrl: URL;
 					try {
-						parsedUrl = new URL(value);
+						return normalizeUrl(value);
 					} catch {
 						return false;
 					}
-					if (!['http:', 'https:'].includes(parsedUrl.protocol)) return false;
-					return parsedUrl.toString().replace(/\/+$/, '');
 				},
 				saveSettings,
 				settings,

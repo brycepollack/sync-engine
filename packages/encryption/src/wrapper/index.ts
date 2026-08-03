@@ -48,7 +48,7 @@ class EncryptionFs implements WrappedFs {
 	private keysPromise: Promise<DerivedKeys> | undefined;
 
 	constructor(
-		public readonly original: Fs,
+		readonly original: Fs,
 		private readonly options: EncryptionWrapperOptions,
 	) {
 		const { password, memoryDB } = options;
@@ -130,8 +130,8 @@ class EncryptionFs implements WrappedFs {
 		return this.decryptStats(stats);
 	}
 
-	private async getKeys(): Promise<DerivedKeys> {
-		if (!this.keysPromise) this.keysPromise = this.createKeysPromise();
+	private getKeys(): Promise<DerivedKeys> {
+		this.keysPromise ??= this.createKeysPromise();
 		return this.keysPromise;
 	}
 
@@ -160,7 +160,7 @@ class EncryptionFs implements WrappedFs {
 		return decryptPathSegments(nameKey, key, this.pathStores);
 	}
 
-	private async decryptStats(stats: Array<Stat>) {
+	private decryptStats(stats: Array<Stat>) {
 		return Promise.all(
 			stats.map(async (stat) => ({ ...stat, key: await this.decryptKey(stat.key) })),
 		);

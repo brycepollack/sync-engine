@@ -155,7 +155,7 @@ test('write failure releases reserved budget', async () => {
 	const wrapper = memoryControlWrapper(remote.fs, state);
 
 	await wrapper.read('held.md', file('held.md', { size: 4 }));
-	remote.control.write = async () => {
+	remote.control.write = () => {
 		throw new Error('write failed');
 	};
 
@@ -165,12 +165,12 @@ test('write failure releases reserved budget', async () => {
 	expect(state.memoryConsumption).toBe(0);
 });
 
-test('read failure does not leave counter incremented', async () => {
+test('read failure does not leave counter incremented', () => {
 	const state = createSharedState(10);
 	const remote = fs();
 	const wrapper = memoryControlWrapper(remote.fs, state);
 
-	remote.control.read = async () => {
+	remote.control.read = () => {
 		throw new Error('read failed');
 	};
 

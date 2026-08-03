@@ -1,6 +1,6 @@
 # Distribution
 
-Modules are distributed as single JavaScript files hosted on a web server. This page covers the module source schema and publishing workflow. For the internal extensibility architecture (trust model, loading lifecycle, integrity verification), see [deep-dive: extensibility](../deep-dive/extensibility).
+Modules are distributed as single JavaScript files hosted on a web server. This page covers the module source schema and publishing workflow. For the internal extensibility architecture (trust model, loading lifecycle, integrity verification), see [deep dive: extensibility](../deep-dive/extensibility).
 
 ## Module Source Schema
 
@@ -56,7 +56,7 @@ Users can add or remove source URLs via the **Edit sources** modal in the Module
 
 Modules are stored at `<vault>/.obsidian/plugins/sync-engine/modules/<id>.js`. The filename uses only the module `id` — no version number or `~` separator.
 
-Version and metadata are persisted in IndexedDB (`AugmentedModuleMeta`), not in the filename. For details, see [deep-dive: extensibility](../deep-dive/extensibility#local-module-storage).
+Version and metadata are persisted in IndexedDB (`AugmentedModuleMeta`), not in the filename. For details, see [deep dive: extensibility](../deep-dive/extensibility#local-module-storage).
 
 ## Auto-Update
 

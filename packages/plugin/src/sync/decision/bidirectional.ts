@@ -91,12 +91,12 @@ export default function bidirectionalDecider(input: DeciderInput): Array<BaseTas
 			},
 			NORECORD_REMOTE_LOCAL_CONFLICT: () => {
 				if (!remote || !local) return;
-				logger(`Decider: conflict \`${key}\`, reason: local remote exist, no record.`);
+				logger(`Decider: conflict \`${key}\`, reason: local remote exists, no record.`);
 				tasks.push(taskFactory('resolveConflict', { key, local, remote }));
 			},
 			NORECORD_REMOTE_LOCAL_RECORD: () => {
 				if (!local || !remote) return;
-				logger(`Decider: add record \`${key}\`, reason: local remote exist, no record.`);
+				logger(`Decider: add record \`${key}\`, reason: local remote exists, no record.`);
 				tasks.push(taskFactory('addRecord', { key, local, remote }));
 			},
 			NORECORD_REMOTE_NOLOCAL_PULL: () => {
@@ -113,7 +113,6 @@ export default function bidirectionalDecider(input: DeciderInput): Array<BaseTas
 				if (!local) return;
 				logger(`Decider: remove local \`${key}\`, reason: local exists, remote deleted.`);
 				tasks.push(taskFactory('removeLocal', { key, local }));
-				return;
 			},
 			RECORD_REMOTE_LOCAL_CONFLICT: () => {
 				if (!remote || !local) return;
@@ -201,7 +200,9 @@ export default function bidirectionalDecider(input: DeciderInput): Array<BaseTas
 			},
 			LOCAL_REMOTE_NORECORD_RECORD: () => {
 				if (!local || !remote) return;
-				logger(`Decider: create record \`${key}\`, reason: local remote exist, no record.`);
+				logger(
+					`Decider: create record \`${key}\`, reason: local remote exists, no record.`,
+				);
 				tasks.push(taskFactory('addRecord', { key, local, remote }));
 			},
 			NONE: () => {},

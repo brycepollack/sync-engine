@@ -60,6 +60,4 @@ On failure, the module waits for active uploads and deletes the temporary upload
 
 ## Base Directory Wrapper
 
-The module applies an overlay [file-system wrapper](../file-system-wrappers) to each WebDAV file system. It prepends the configured base directory to every delegated key and removes it from returned `Stat` keys and listing progress. Listing also omits the base directory itself, leaving the configured directory exposed as `/`.
-
-The wrapper rejects any returned path outside its base directory.
+WebDAV uses the shared importable [`prefixWrapper`](../../development/file-system#prefixwrapper) to expose its configured base directory as the file-system root. See [file-system wrappers](../file-system-wrappers) for wrapper-chain details.

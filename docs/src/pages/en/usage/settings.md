@@ -70,7 +70,9 @@ This changes how the remote storage looks. Read the separate [Asymmetric Storage
 
 - Remote files will not be readable in their normal folder structure.
 - Every device using the vault must use the same setting.
-- Changing this setting for an existing vault requires migration. Sync Engine asks before starting migration.
+- Changing this setting for an existing vault opens a migration prompt. Cancel leaves the current setting unchanged.
+- **Toggle without migration** changes the setting without moving remote files or clearing records. Use it only when the remote storage already has the target layout, such as after migrating on another device.
+- **Start migration** updates local state, clears matching records, removes known remote entries, and repopulates the remote storage with the new layout. Do not start it concurrently on multiple devices.
 - Enable it only when you do not need to browse the remote files as ordinary files.
 
 Enabled by default.

@@ -67,7 +67,7 @@ test('non mergeable write should not touch store', async () => {
 test('failed mutation should not update base text', async () => {
 	const remote = fs({
 		control: {
-			write: async () => {
+			write: () => {
 				throw new Error('write failed');
 			},
 		},

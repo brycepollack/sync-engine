@@ -1,6 +1,7 @@
 import type { DataAdapter } from 'obsidian';
 import sha256 from '@/utils/sha-256';
 
+// oxlint-disable-next-line typescript/no-explicit-any
 export type General = any;
 type GeneralCtor = new (...args: ReadonlyArray<General>) => General;
 
@@ -14,7 +15,8 @@ export default async function loadModule(
 	if (integrity && (await sha256(file)) !== integrity)
 		throw new Error('Module has been maliciously modified!');
 	const blob = new Blob([file], { type: 'application/javascript' });
-	const ctor: GeneralCtor | undefined = (await import(URL.createObjectURL(blob))).default;
+	const module = (await import(URL.createObjectURL(blob))) as { default?: GeneralCtor };
+	const ctor = module.default;
 	if (typeof ctor !== 'function') throw new Error(`Invalid module!`);
 	return ctor;
 }

@@ -120,7 +120,7 @@ export default class ModuleEditorModal extends Modal {
 
 		new Setting(this.contentEl)
 			.addButton((button) =>
-				button.setButtonText(translate('cancel')).onClick(async () => this.close()),
+				button.setButtonText(translate('cancel')).onClick(() => this.close()),
 			)
 			.addButton((button) =>
 				button

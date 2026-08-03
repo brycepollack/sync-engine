@@ -3,7 +3,7 @@ import type { Binary, FileStat } from '@/types';
 
 class DebugFs implements WrappedFs {
 	constructor(
-		public readonly original: Fs,
+		readonly original: Fs,
 		private readonly log: (content: string) => void,
 	) {}
 

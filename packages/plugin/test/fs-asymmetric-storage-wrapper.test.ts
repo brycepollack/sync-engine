@@ -30,7 +30,7 @@ test('list should infer folder anchors from remoteStatContext and return hierarc
 	seedRemoteContext(file('00000abcde~folder'), file('abcdeuvwxy~nested'));
 	const remote = fs({
 		control: {
-			list: async () => [
+			list: () => [
 				folder('/'),
 				file('00000~root.md', { size: 1, uid: 'root-file' }),
 				file('00000abcde~folder', { size: 0, uid: 'folder-marker' }),
@@ -57,7 +57,7 @@ test('list should skip malformed or orphan flattened entries without throwing', 
 	seedRemoteContext(file('00000abcde~folder'));
 	const remote = fs({
 		control: {
-			list: async () => [
+			list: () => [
 				folder('/'),
 				file('bad-key', { size: 1, uid: 'bad' }),
 				file('zzzzz~lost.md', { size: 2, uid: 'orphan-file' }),

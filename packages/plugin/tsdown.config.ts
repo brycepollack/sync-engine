@@ -51,7 +51,8 @@ const pluginConfig = defineConfig({
 		codeSplitting: false,
 	},
 	platform: 'browser',
-	plugins: [solid()],
+	// Fixes SolidJS cannot attach eventListeners to elements existing on another window
+	plugins: [solid({ solid: { delegateEvents: false } })],
 	target: 'es2024',
 });
 
@@ -63,6 +64,7 @@ const sdkConfig = defineConfig({
 		dev: 'src/sdk/dev.ts',
 		index: 'src/sdk/index.ts',
 	},
+	unbundle: true,
 });
 
 export default buildingPlugin ? pluginConfig : sdkConfig;

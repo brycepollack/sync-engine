@@ -53,8 +53,8 @@ export async function deriveHkdfKey(
 	);
 }
 
-export async function importAesGcmKey(key: BufferSource): Promise<CryptoKey> {
-	return await crypto.subtle.importKey('raw', key, 'AES-GCM', false, ['encrypt', 'decrypt']);
+export function importAesGcmKey(key: BufferSource): Promise<CryptoKey> {
+	return crypto.subtle.importKey('raw', key, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
 
 export async function decryptContentChunk(
@@ -111,6 +111,6 @@ function encodeUInt(value: number, byteLength: number): Binary {
 	return result;
 }
 
-export async function sha256Digest(data: BufferSource): Promise<ArrayBuffer> {
+export function sha256Digest(data: BufferSource): Promise<ArrayBuffer> {
 	return crypto.subtle.digest('SHA-256', data);
 }

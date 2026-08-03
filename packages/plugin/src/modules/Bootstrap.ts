@@ -6,14 +6,14 @@ import type { FileTreeTranslations } from '@/components/file-tree';
 import type { HeadersEditorTranslations } from '@/components/HeadersEditorModal';
 import type { ModuleEditorTranslations } from '@/components/ModuleEditorModal';
 import type { UnknownModuleTranslations } from '@/components/UnknownModuleModal';
-import type { BatchOptimizer, MemoryControlSharedState } from '@/fs';
+import type { BatchOptimizer, Fs, MemoryControlSharedState } from '@/fs';
 import type { ControlsSettingTranslations } from '@/settings/controls';
 import type { DevelopmentSettingTranslations } from '@/settings/development';
 import type { FeaturesSettingTranslations } from '@/settings/features';
 import type { FilterSettingTranslations } from '@/settings/filter';
 import type { HeadSettingTranslations } from '@/settings/head';
 import type { MiscellaneousSettingTranslations } from '@/settings/miscellaneous';
-import type { Progress, Stat, TogglableValue } from '@/types';
+import type { Stat, TogglableValue } from '@/types';
 import en from '@/en';
 import {
 	rateLimiterMiddleware,
@@ -69,14 +69,19 @@ const MAX_VAULT_CONCURRENCY = 200;
 
 export default class Bootstrap {
 	private readonly cleanupCallbacks: Array<() => void> = [];
+
+	// MemoryControlWrapper
 	private readonly memoryStates: Omit<MemoryControlSharedState, 'maxMemory'> = {
 		hangingOperations: [],
 		memoryConsumption: 0,
 	};
+	// CancellationWrapper
 	private isCancelled?: Ref<boolean>;
-
-	private readonly localPool: Array<string> = [];
-	private readonly remotePool: Array<string> = [];
+	// OptimizationWrapper
+	private readonly localPool = new Set<string>();
+	private readonly remotePool = new Set<string>();
+	private localFs?: Fs;
+	private remoteFs?: Fs;
 
 	declare readonly i18n: {
 		bidirectional: string;
@@ -102,10 +107,6 @@ export default class Bootstrap {
 		realtimeSyncFastMode: boolean;
 		asymmetricStorage: boolean;
 		customHeaders: CustomHeaders;
-	};
-	declare readonly events: {
-		migrationProgress: Progress;
-		migrationFailed: string;
 	};
 
 	constructor(
@@ -216,7 +217,7 @@ export default class Bootstrap {
 			apply: (fs) =>
 				optimizationWrapper(fs, {
 					batchOptimizer: optimizeLocal,
-					thatPool: this.remotePool,
+					thisPool: this.localPool,
 				}),
 			priority: 2000,
 		});
@@ -236,7 +237,19 @@ export default class Bootstrap {
 			priority: 20_000,
 		});
 		registerLocalFsWrapper({
-			apply: (fs) => optimizationCompanionWrapper(fs, this.localPool),
+			apply: (fs) => {
+				this.localFs = fs;
+				return optimizationCompanionWrapper(fs, {
+					getThatFs: () => {
+						if (!this.remoteFs)
+							throw new Error(
+								'RemoteFs not found for local optimization companion, this is probably a bug of Sync Engine.',
+							);
+						return this.remoteFs;
+					},
+					thatPool: this.remotePool,
+				});
+			},
 			priority: 21_000,
 		});
 
@@ -252,7 +265,7 @@ export default class Bootstrap {
 			apply: (fs) =>
 				optimizationWrapper(fs, {
 					batchOptimizer: optimizeRemote,
-					thatPool: this.localPool,
+					thisPool: this.remotePool,
 				}),
 			priority: 2000,
 		});
@@ -288,7 +301,19 @@ export default class Bootstrap {
 			priority: 20_000,
 		});
 		registerRemoteFsWrapper({
-			apply: (fs) => optimizationCompanionWrapper(fs, this.remotePool),
+			apply: (fs) => {
+				this.remoteFs = fs;
+				return optimizationCompanionWrapper(fs, {
+					getThatFs: () => {
+						if (!this.localFs)
+							throw new Error(
+								'LocalFs not found for remote optimization companion, this is probably a bug of Sync Engine.',
+							);
+						return this.localFs;
+					},
+					thatPool: this.localPool,
+				});
+			},
 			priority: 21_000,
 		});
 
@@ -379,10 +404,11 @@ export default class Bootstrap {
 		this.cleanupCallbacks.push(
 			on('syncStarted', ({ isCancelled }) => {
 				this.isCancelled = isCancelled;
-				this.memoryStates.hangingOperations.length =
-					this.localPool.length =
-					this.remotePool.length =
-						0;
+				this.memoryStates.hangingOperations.length = 0;
+				this.localFs = undefined;
+				this.remoteFs = undefined;
+				this.localPool.clear();
+				this.remotePool.clear();
 			}),
 			on('syncTerminated', () => (this.isCancelled = undefined)),
 		);

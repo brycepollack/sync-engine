@@ -38,7 +38,23 @@ export function basename(key: string): string {
 export function normalizeUrl(value: string) {
 	const parsedUrl = new URL(value);
 	if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error(`Invalid URL ${value}`);
-	return parsedUrl.toString().replace(/\/+$/, '');
+	return parsedUrl.toString().replace(/\/+$/v, '');
+}
+
+export function encodeUrl(url: string) {
+	return url
+		.split('/')
+		.map((segment) =>
+			segment === ''
+				? ''
+				: encodeURIComponent(segment)
+						.replaceAll('!', '%21')
+						.replaceAll("'", '%27')
+						.replaceAll('(', '%28')
+						.replaceAll(')', '%29')
+						.replaceAll('*', '%2A'),
+		)
+		.join('/');
 }
 
 export function stripEndSlash(key: string) {

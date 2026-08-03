@@ -1,22 +1,15 @@
-import type {
-	Binary,
-	MaybePromise,
-	Stat,
-	Fs,
-	WrappedFs,
-	FileStat,
-	ListReporter,
-} from '@hesprs/sync-engine-sdk';
 import { normalizeBaseDir } from '@repo/shared/path';
+import type { Fs, ListReporter, WrappedFs } from '@/fs';
+import type { Binary, FileStat, MaybePromise, Stat } from '@/types';
 
 function joinKey(prefix: string, key: string): string {
-	const joined = `${prefix}${key}`;
-	return joined.endsWith('//') ? joined.slice(0, -1) : joined;
+	return key === '/' ? prefix : prefix === '/' ? key : `${prefix}${key}`;
 }
 
-function stripKey(prefix: string, path: string): string {
-	if (!path.startsWith(prefix)) throw new Error(`Accessed out-of-scope path "${path}"`);
-	const key = path.slice(prefix.length);
+function stripKey(prefix: string, key: string): string {
+	if (prefix === '/') return key;
+	if (!key.startsWith(prefix)) throw new Error(`Accessed out-of-scope path "${key}"`);
+	key = key.slice(prefix.length);
 	return key === '' ? '/' : key;
 }
 
@@ -30,8 +23,8 @@ function stripKeyFromStats(prefix: string, stats: Array<Stat>): Array<Stat> {
 
 class PrefixFs implements WrappedFs {
 	constructor(
-		public readonly original: Fs,
-		private readonly prefix: string,
+		readonly original: Fs,
+		private readonly prefix: string, // Must be a unified key directory
 	) {}
 
 	getUid(): string {
@@ -66,26 +59,24 @@ class PrefixFs implements WrappedFs {
 		return this.original.mkdir(joinKey(this.prefix, key), recursive);
 	}
 
-	stat(key: string) {
-		return Promise.resolve(this.original.stat(joinKey(this.prefix, key))).then((stat) =>
-			stripKeyFromStat(this.prefix, stat),
-		);
+	async stat(key: string) {
+		const stat = await this.original.stat(joinKey(this.prefix, key));
+		return stripKeyFromStat(this.prefix, stat);
 	}
 
 	exists(key: string): MaybePromise<boolean> {
 		return this.original.exists(joinKey(this.prefix, key));
 	}
 
-	list(key: string, reporter: ListReporter) {
-		return Promise.resolve(
-			this.original.list(joinKey(this.prefix, key), (progress) =>
-				reporter(
-					Object.assign(progress, {
-						current: stripKey(this.prefix, progress.current),
-					}),
-				),
+	async list(key: string, reporter: ListReporter) {
+		const stats = await this.original.list(joinKey(this.prefix, key), (progress) =>
+			reporter(
+				Object.assign(progress, {
+					current: stripKey(this.prefix, progress.current),
+				}),
 			),
-		).then((stats) => stripKeyFromStats(this.prefix, stats));
+		);
+		return stripKeyFromStats(this.prefix, stats);
 	}
 }
 

@@ -1,14 +1,13 @@
 import type { EncryptionSettings } from '@';
 import type { Context, Fragment, Translate } from '@hesprs/sync-engine-sdk';
 import type { App } from 'obsidian';
-import { MigrationModal } from '@hesprs/sync-engine-sdk';
+import { setNeedMigration } from '@hesprs/sync-engine-sdk';
 import { SecretComponent, Setting } from 'obsidian';
 
 export type EncryptionTranslations = {
 	encryption: string;
 	encryptionDescription: string;
-	encryptionEnableMigration: Fragment;
-	encryptionDisableMigration: Fragment;
+	encryptionMigration: Fragment<'enable' | 'disable'>;
 };
 
 export default function encryptionSetting(
@@ -22,7 +21,6 @@ export default function encryptionSetting(
 	settings: EncryptionSettings,
 ) {
 	const { translate, app, saveSettings, recordStoreExists } = ctx;
-	let selfTrigger = false;
 
 	new Setting(el)
 		.setName(translate('encryption'))
@@ -34,30 +32,14 @@ export default function encryptionSetting(
 			}),
 		)
 		.addToggle((toggle) =>
-			toggle.setValue(settings.enabled).onChange((value) => {
-				if (selfTrigger) {
-					selfTrigger = false;
-					return;
-				}
-				const original = settings.enabled;
-				void recordStoreExists().then((exists) => {
-					if (exists)
-						new MigrationModal(ctx as Context, {
-							apply: () => {
-								settings.enabled = value;
-								void saveSettings();
-							},
-							content: translate(
-								value ? 'encryptionEnableMigration' : 'encryptionDisableMigration',
-							),
-							onCancel: () => {
-								settings.enabled = original;
-								void saveSettings();
-								selfTrigger = true;
-								toggle.setValue(original);
-							},
-						}).open();
-				});
+			setNeedMigration(ctx as Context, {
+				apply: (value) => {
+					settings.enabled = value;
+					void saveSettings();
+				},
+				content: (value) => translate('encryptionMigration', value ? 'enable' : 'disable'),
+				needMigration: () => recordStoreExists(),
+				toggle: toggle.setValue(settings.enabled),
 			}),
 		);
 }

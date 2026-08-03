@@ -75,7 +75,7 @@ export default function createWebDAVReadStream({
 				flush();
 				schedule();
 			})
-			.catch((error) => {
+			.catch((error: unknown) => {
 				if (closed) return;
 				closed = true;
 				controllerRef?.error(error);

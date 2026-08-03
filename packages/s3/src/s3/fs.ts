@@ -1,24 +1,25 @@
 import type {
 	Binary,
 	FileStat,
-	FolderStat,
 	ListReporter,
 	Request,
+	RequestParam,
+	RequestResponse,
 	RootFs,
 	Stat,
 } from '@hesprs/sync-engine-sdk';
 import { concatBinary, textToUint8Array } from '@repo/shared/binary';
 import { getStatus } from '@repo/shared/get-status';
-import { dirname, normalizeChar, normalizeKey, stripEndSlash } from '@repo/shared/path';
-import type { SignedRequestParams, SigV4Options, UrlStyle } from './sigv4';
+import parseXML from '@repo/shared/parse-xml';
+import { dirname, encodeUrl, isFolder } from '@repo/shared/path';
+import type { UrlStyle } from './sigv4';
 import { PART_SIZE, multipartUpload } from './multipart';
 import createS3ReadStream from './read-stream';
-import { md5Base64, signRequest } from './sigv4';
+import { md5Base64 } from './sigv4';
 import { buildUrl, buildUrlWithQuery, getHeader } from './url';
 
 export type S3FsOptions = {
 	accessKeyId: string;
-	secretAccessKey: string;
 	endpoint: string;
 	region: string;
 	bucket: string;
@@ -31,37 +32,84 @@ export const BATCH_DELETE_MAX_KEYS = 1000;
 const READ_CHUNK_SIZE = 2 * 1024 * 1024; // 2 MiB
 const READ_MAX_CONCURRENT = 8;
 
-// S3-compatible XML namespace
-const S3_NS = 'http://s3.amazonaws.com/doc/2006-03-01/';
+type S3ErrorResponse = {
+	Error?: {
+		Code?: string;
+		Message?: string;
+	};
+};
+
+type S3ListBucketResult = {
+	ListBucketResult: {
+		Contents?: S3Object | Array<S3Object>;
+		IsTruncated?: string;
+		NextContinuationToken?: string;
+	};
+};
+
+type S3DeleteError = {
+	Key?: string;
+	Code?: string;
+	Message?: string;
+};
+
+type S3DeleteResponse = {
+	DeleteResult?: {
+		Error?: S3DeleteError | Array<S3DeleteError>;
+	};
+};
+
+type S3Object = {
+	Key?: string;
+	Size?: string;
+	ETag?: string;
+	LastModified?: string;
+};
+
+const mtimeMissing = new Error('S3 did not return last modified time for objects!');
+const sizeMissing = new Error('S3 did not return size for objects!');
 
 function buildDeleteObjectsXml(keys: Array<string>): string {
 	const objects = keys.map((key) => `<Object><Key>${escapeXml(key)}</Key></Object>`).join('');
-	return `<?xml version="1.0" encoding="UTF-8"?><Delete xmlns="${S3_NS}"><Quiet>true</Quiet>${objects}</Delete>`;
+	return `<?xml version="1.0" encoding="UTF-8"?><Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Quiet>true</Quiet>${objects}</Delete>`;
 }
 
 function escapeXml(str: string): string {
 	return str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&apos;');
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&apos;');
 }
 
 function parseS3Error(xml: string): string | undefined {
-	const match = /<Code>(?<code>[^<]+)<\/Code>/.exec(xml);
-	if (match?.groups?.code) {
-		const msgMatch = /<Message>(?<message>[^<]+)<\/Message>/.exec(xml);
-		return `S3 ${match.groups.code}: ${msgMatch?.groups?.message ?? ''}`;
+	try {
+		const error = parseXML<S3ErrorResponse>(xml).Error;
+		if (error?.Code) return formatS3Error(error.Code, error.Message);
+	} catch {
+		/* Ignore malformed S3 error XML and use the HTTP fallback. */
 	}
 }
 
-function encodeKey(key: string): string {
-	if (key === '/') return '';
-	return key
-		.split('/')
-		.map((segment) => (segment === '' ? '' : encodeURIComponent(segment)))
-		.join('/');
+function formatS3Error(code: string, message?: string): string {
+	return `S3 ${code}: ${message ?? ''}`;
+}
+
+function asArray<T>(value: T | Array<T> | undefined): Array<T> {
+	return value === undefined ? [] : Array.isArray(value) ? value : [value];
+}
+
+function parseBatchDeleteResponse(xml: string, keys: Array<string>): Record<string, true | string> {
+	const result = Object.fromEntries(keys.map((key) => [key, true])) as Record<
+		string,
+		true | string
+	>;
+	if (!xml.trim()) return result;
+	const errors = asArray(parseXML<S3DeleteResponse>(xml).DeleteResult?.Error);
+	for (const error of errors)
+		if (error.Key && error.Code) result[error.Key] = formatS3Error(error.Code, error.Message);
+	return result;
 }
 
 function getRecursiveKeys(key: string): Array<string> {
@@ -74,7 +122,6 @@ function getRecursiveKeys(key: string): Array<string> {
 }
 
 export default class S3Fs implements RootFs {
-	private readonly credentials: SigV4Options;
 	private readonly request: Request;
 	private readonly endpoint: string;
 	private readonly bucket: string;
@@ -83,12 +130,6 @@ export default class S3Fs implements RootFs {
 	constructor(private readonly options: S3FsOptions) {
 		if (!options.request) throw new Error('S3 request is required.');
 		this.request = options.request;
-		this.credentials = {
-			accessKeyId: options.accessKeyId,
-			region: options.region,
-			secretAccessKey: options.secretAccessKey,
-			service: 's3',
-		};
 		this.endpoint = options.endpoint;
 		this.bucket = options.bucket;
 		this.urlStyle = options.urlStyle;
@@ -98,39 +139,17 @@ export default class S3Fs implements RootFs {
 		return `s3~${this.endpoint}~${this.bucket}~${this.options.accessKeyId}`;
 	}
 
-	private async signedRequest(params: SignedRequestParams): Promise<{
-		headers: Record<string, string>;
-		text: () => string;
-		bytes: () => Binary;
-		status: number;
-	}> {
-		const signed = await signRequest(
-			{
-				body: params.body,
-				headers: params.headers ?? {},
-				method: params.method,
-				url: params.url,
-			},
-			this.credentials,
-			new Date(),
-		);
-
-		const response = await this.request({
-			body: signed.body,
-			headers: signed.headers,
-			method: signed.method,
-			url: signed.url,
+	private buildUrl(key: string) {
+		return buildUrl({
+			bucket: this.bucket,
+			endpoint: this.endpoint,
+			key,
+			urlStyle: this.urlStyle,
 		});
-		return response;
 	}
 
-	private async signedRequestOrThrow(params: SignedRequestParams): Promise<{
-		headers: Record<string, string>;
-		text: () => string;
-		bytes: () => Binary;
-		status: number;
-	}> {
-		const response = await this.signedRequest(params);
+	private async requestOrThrow(params: RequestParam): Promise<RequestResponse> {
+		const response = await this.request(params);
 		if (response.status >= 200 && response.status < 300) return response;
 
 		const body = response.text();
@@ -143,56 +162,41 @@ export default class S3Fs implements RootFs {
 	}
 
 	async read(key: string): Promise<Binary> {
-		const response = await this.signedRequestOrThrow({
+		const response = await this.requestOrThrow({
 			method: 'GET',
-			url: buildUrl({
-				bucket: this.bucket,
-				endpoint: this.endpoint,
-				key,
-				urlStyle: this.urlStyle,
-			}),
+			url: this.buildUrl(key),
 		});
 		return response.bytes();
 	}
 
-	async readStream(key: string, { size }: FileStat): Promise<ReadableStream<Binary>> {
-		const url = buildUrl({
-			bucket: this.bucket,
-			endpoint: this.endpoint,
-			key,
-			urlStyle: this.urlStyle,
-		});
-		return createS3ReadStream({
-			chunkSize: READ_CHUNK_SIZE,
-			maxConcurrent: READ_MAX_CONCURRENT,
-			requestRange: async (start, endInclusive) => {
-				const response = await this.signedRequestOrThrow({
-					headers: { Range: `bytes=${start}-${endInclusive}` },
-					method: 'GET',
-					url,
-				});
-				return response.bytes();
-			},
-			size,
-		});
+	readStream(key: string, { size }: FileStat): Promise<ReadableStream<Binary>> {
+		const url = this.buildUrl(key);
+		return Promise.resolve(
+			createS3ReadStream({
+				chunkSize: READ_CHUNK_SIZE,
+				maxConcurrent: READ_MAX_CONCURRENT,
+				requestRange: async (start, endInclusive) => {
+					const response = await this.requestOrThrow({
+						headers: { Range: `bytes=${start}-${endInclusive}` },
+						method: 'GET',
+						url,
+					});
+					return response.bytes();
+				},
+				size,
+			}),
+		);
 	}
 
 	async write(key: string, value: Binary): Promise<string> {
-		const response = await this.signedRequestOrThrow({
+		const response = await this.requestOrThrow({
 			body: value,
 			headers: { 'Content-Type': 'application/octet-stream' },
 			method: 'PUT',
-			url: buildUrl({
-				bucket: this.bucket,
-				endpoint: this.endpoint,
-				key,
-				urlStyle: this.urlStyle,
-			}),
+			url: this.buildUrl(key),
 		});
 		const etag = getHeader(response.headers, 'etag');
 		if (etag) return etag;
-
-		// Fallback: HEAD the object to get its ETag
 		const stat = await this.stat(key);
 		if (!stat.isDir) return stat.uid;
 		throw new Error(`S3 write returned a folder stat for ${key}.`);
@@ -203,10 +207,9 @@ export default class S3Fs implements RootFs {
 		return multipartUpload(
 			{
 				bucket: this.bucket,
-				credentials: this.credentials,
 				endpoint: this.endpoint,
 				key,
-				signedRequest: (params) => this.signedRequestOrThrow(params),
+				request: (params) => this.requestOrThrow(params),
 				stat: (k) => this.stat(k),
 				urlStyle: this.urlStyle,
 			},
@@ -216,14 +219,9 @@ export default class S3Fs implements RootFs {
 
 	async delete(key: string): Promise<void> {
 		try {
-			await this.signedRequestOrThrow({
+			await this.requestOrThrow({
 				method: 'DELETE',
-				url: buildUrl({
-					bucket: this.bucket,
-					endpoint: this.endpoint,
-					key,
-					urlStyle: this.urlStyle,
-				}),
+				url: this.buildUrl(key),
 			});
 		} catch (error) {
 			if (getStatus(error) === 404) return;
@@ -235,7 +233,8 @@ export default class S3Fs implements RootFs {
 	 * Batch delete — S3-specific extension method accessed by the optimizer.
 	 * Up to 1000 keys per DeleteObjects request.
 	 */
-	async batchDelete(keys: Array<string>): Promise<void> {
+	async batchDelete(keys: Array<string>): Promise<Record<string, true | string>> {
+		const result: Record<string, true | string> = {};
 		for (let i = 0; i < keys.length; i += BATCH_DELETE_MAX_KEYS) {
 			const batch = keys.slice(i, i + BATCH_DELETE_MAX_KEYS);
 			const body = buildDeleteObjectsXml(batch);
@@ -243,7 +242,7 @@ export default class S3Fs implements RootFs {
 				{ bucket: this.bucket, endpoint: this.endpoint, key: '/', urlStyle: this.urlStyle },
 				{ delete: '' },
 			);
-			await this.signedRequestOrThrow({
+			const response = await this.requestOrThrow({
 				body: textToUint8Array(body),
 				headers: {
 					'Content-MD5': await md5Base64(body),
@@ -252,19 +251,16 @@ export default class S3Fs implements RootFs {
 				method: 'POST',
 				url,
 			});
+			Object.assign(result, parseBatchDeleteResponse(response.text(), batch));
 		}
+		return result;
 	}
 
 	async move(oldKey: string, newKey: string): Promise<void> {
 		// S3 has no native rename — copy then delete
-		const copySource = `${this.bucket}/${encodeKey(oldKey)}`;
-		const destUrl = buildUrl({
-			bucket: this.bucket,
-			endpoint: this.endpoint,
-			key: newKey,
-			urlStyle: this.urlStyle,
-		});
-		await this.signedRequestOrThrow({
+		const copySource = `${this.bucket}/${encodeUrl(oldKey)}`;
+		const destUrl = this.buildUrl(newKey);
+		await this.requestOrThrow({
 			headers: {
 				'Content-Type': 'application/octet-stream',
 				'x-amz-copy-source': copySource,
@@ -279,14 +275,9 @@ export default class S3Fs implements RootFs {
 		const dirKeys = recursive ? getRecursiveKeys(key) : [key];
 		for (const dirKey of dirKeys) {
 			// S3 has no real folders — create a 0-byte placeholder object
-			const url = buildUrl({
-				bucket: this.bucket,
-				endpoint: this.endpoint,
-				key: dirKey,
-				urlStyle: this.urlStyle,
-			});
+			const url = this.buildUrl(dirKey);
 			try {
-				await this.signedRequestOrThrow({
+				await this.requestOrThrow({
 					body: new Uint8Array(0),
 					headers: { 'Content-Type': 'application/octet-stream' },
 					method: 'PUT',
@@ -300,41 +291,16 @@ export default class S3Fs implements RootFs {
 	}
 
 	async stat(key: string): Promise<Stat> {
-		if (key === '/') return { isDir: true, key: '/' } satisfies FolderStat;
-
-		// HEAD request to check existence and get metadata
-		const url = buildUrl({
-			bucket: this.bucket,
-			endpoint: this.endpoint,
-			key,
-			urlStyle: this.urlStyle,
-		});
-		try {
-			const response = await this.signedRequestOrThrow({ method: 'HEAD', url });
-			const etag = getHeader(response.headers, 'etag');
-			const contentLength = getHeader(response.headers, 'content-length');
-			const lastModified = getHeader(response.headers, 'last-modified');
-
-			if (contentLength === '0' && key.endsWith('/'))
-				return { isDir: true, key: normalizeKey(normalizeChar(key), true) };
-
-			const mtime = lastModified ? new Date(lastModified).valueOf() : Date.now();
-			const size = Number.parseInt(contentLength ?? '0', 10);
-			return {
-				isDir: false,
-				key: normalizeKey(normalizeChar(key), false),
-				mtime,
-				size,
-				uid: etag ?? `${mtime}~${size}`,
-			};
-		} catch (error) {
-			if (getStatus(error) === 404) {
-				// Check if it's a folder (common prefix)
-				const isDir = await this.existsDir(key);
-				if (isDir) return { isDir: true, key: normalizeKey(normalizeChar(key), true) };
-			}
-			throw error;
-		}
+		if (isFolder(key)) return { isDir: true, key };
+		const response = await this.requestOrThrow({ method: 'HEAD', url: this.buildUrl(key) });
+		const etag = getHeader(response.headers, 'etag');
+		const contentLength = getHeader(response.headers, 'content-length');
+		const lastModified = getHeader(response.headers, 'last-modified');
+		if (!lastModified) throw mtimeMissing;
+		if (!contentLength) throw sizeMissing;
+		const mtime = new Date(lastModified).valueOf();
+		const size = Number.parseInt(contentLength);
+		return { isDir: false, key, mtime, size, uid: etag ?? `${mtime}~${size}` };
 	}
 
 	async exists(key: string): Promise<boolean> {
@@ -343,117 +309,57 @@ export default class S3Fs implements RootFs {
 			await this.stat(key);
 			return true;
 		} catch (error) {
-			if (getStatus(error) === 404)
-				// Stat already checks for dir existence in the 404 path,
-				// So if we're here, it truly doesn't exist
-				return false;
+			if (getStatus(error) === 404) return false;
 			throw error;
 		}
 	}
 
-	/**
-	 * Check if a directory exists by listing objects with the prefix.
-	 */
-	private async existsDir(key: string): Promise<boolean> {
-		const dirKey = key.endsWith('/') ? key : `${key}/`;
-		const url = buildUrlWithQuery(
-			{ bucket: this.bucket, endpoint: this.endpoint, key: '/', urlStyle: this.urlStyle },
-			{ 'list-type': '2', 'max-keys': '1', prefix: dirKey },
-		);
-		try {
-			const response = await this.signedRequestOrThrow({ method: 'GET', url });
-			const xml = response.text();
-			// If any <Contents> element exists, the folder has content
-			return /<Contents\b/.test(xml);
-		} catch {
-			return false;
-		}
-	}
-
 	async list(key: string, reporter: ListReporter): Promise<Array<Stat>> {
-		const prefix = key === '/' ? '' : key.endsWith('/') ? key : `${key}/`;
 		const results: Array<Stat> = [];
 		let continuationToken: string | undefined;
-
 		do {
 			const query: Record<string, string> = {
-				delimiter: '/',
 				'list-type': '2',
-				prefix,
+				prefix: key === '/' ? '' : key,
 			};
 			if (continuationToken) query['continuation-token'] = continuationToken;
-
 			const url = buildUrlWithQuery(
 				{ bucket: this.bucket, endpoint: this.endpoint, key: '/', urlStyle: this.urlStyle },
 				query,
 			);
-			const response = await this.signedRequestOrThrow({ method: 'GET', url });
-			const xml = response.text();
-
-			// Parse contents (files)
-			const fileRegex = /<Contents\b[^>]*>(?<content>[\s\S]*?)<\/Contents>/g;
-			let match: RegExpExecArray | null;
-			while ((match = fileRegex.exec(xml)) !== null) {
-				const content = match.groups?.content ?? '';
-				const keyMatch = /<Key>(?<key>[^<]+)<\/Key>/.exec(content);
-				const sizeMatch = /<Size>(?<size>\d+)<\/Size>/.exec(content);
-				const etagMatch = /<ETag>(?<etag>[^<]+)<\/ETag>/.exec(content);
-				const lastModifiedMatch = /<LastModified>(?<lm>[^<]+)<\/LastModified>/.exec(
-					content,
-				);
-				if (keyMatch?.groups?.key) {
-					const fileKey = keyMatch.groups.key;
-					if (fileKey === prefix) continue; // Skip the folder placeholder itself
-					const stat: Stat = {
-						isDir: false,
-						key: normalizeKey(normalizeChar(fileKey), false),
-						mtime: lastModifiedMatch?.groups?.lm
-							? new Date(lastModifiedMatch.groups.lm).valueOf()
-							: Date.now(),
-						size: Number.parseInt(sizeMatch?.groups?.size ?? '0', 10),
-						uid: etagMatch?.groups?.etag ?? '',
-					};
-					results.push(stat);
+			const response = await this.requestOrThrow({ method: 'GET', url });
+			const { ListBucketResult: listing } = parseXML<S3ListBucketResult>(response.text());
+			const contents = asArray(listing.Contents);
+			await Promise.all(
+				contents.map(async ({ Key, ETag, LastModified, Size }, index) => {
 					if (
+						!Key ||
+						Key === key ||
 						(await reporter({
-							completed: results.length,
-							current: stat.key,
-							total: 0,
+							completed: index + 1,
+							current: Key,
+							total: contents.length,
 						})) === 'exclude'
 					)
-						results.pop();
-				}
-			}
-
-			// Parse common prefixes (subfolders)
-			const prefixRegex = /<CommonPrefixes\b[^>]*>(?<content>[\s\S]*?)<\/CommonPrefixes>/g;
-			while ((match = prefixRegex.exec(xml)) !== null) {
-				const content = match.groups?.content ?? '';
-				const prefixMatch = /<Prefix>(?<prefix>[^<]+)<\/Prefix>/.exec(content);
-				if (prefixMatch?.groups?.prefix) {
-					const dirKey = prefixMatch.groups.prefix;
-					const stat: Stat = {
-						isDir: true,
-						key: normalizeKey(normalizeChar(stripEndSlash(dirKey)), true),
-					};
-					results.push(stat);
-					if (
-						(await reporter({
-							completed: results.length,
-							current: stat.key,
-							total: 0,
-						})) === 'exclude'
-					)
-						results.pop();
-				}
-			}
-
-			// Check for more results
-			const truncatedMatch = /<IsTruncated>(?<truncated>true|false)<\/IsTruncated>/.exec(xml);
-			const isTruncated = truncatedMatch?.groups?.truncated === 'true';
-			const tokenMatch =
-				/<NextContinuationToken>(?<token>[^<]+)<\/NextContinuationToken>/.exec(xml);
-			continuationToken = isTruncated ? tokenMatch?.groups?.token : undefined;
+						return;
+					if (isFolder(Key)) results.push({ isDir: true, key: Key });
+					else {
+						if (!LastModified) throw mtimeMissing;
+						if (!Size) throw sizeMissing;
+						const mtime = new Date(LastModified).valueOf();
+						const size = Number.parseInt(Size);
+						results.push({
+							isDir: false,
+							key: Key,
+							mtime,
+							size,
+							uid: ETag ?? `${mtime}~${size}`,
+						});
+					}
+				}),
+			);
+			continuationToken =
+				listing.IsTruncated === 'true' ? listing.NextContinuationToken : undefined;
 		} while (continuationToken);
 
 		return results;

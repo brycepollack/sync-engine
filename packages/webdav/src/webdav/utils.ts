@@ -1,4 +1,5 @@
 import type { Stat } from '@hesprs/sync-engine-sdk';
+import { encodeUrl } from '@repo/shared/path';
 
 export function getAuthorization(username: string, password: string) {
 	return `Basic ${btoa(`${username}:${password}`)}`;
@@ -17,7 +18,7 @@ export function getFileUid(stat: Stat, key: string) {
 }
 
 export function buildUrl(endpoint: string, key: string) {
-	const encodedPath = key.split('/').map(encodeURIComponent).join('/');
+	const encodedPath = encodeUrl(key);
 	if (key === '/') return `${endpoint}/`;
 	return `${endpoint}${encodedPath.startsWith('/') ? encodedPath : `/${encodedPath}`}`;
 }

@@ -179,7 +179,6 @@ function ActionButton(props: {
 	let button: HTMLButtonElement;
 
 	createEffect(() => {
-		button.onClickEvent(() => props.onClick());
 		setIcon(button, props.pending ? 'loader-circle' : props.icon);
 		button.ariaLabel = props.tooltip;
 		setTooltip(button, props.tooltip);
@@ -191,6 +190,7 @@ function ActionButton(props: {
 		<button
 			class="clickable-icon rounded-md p-1"
 			disabled={props.disabled}
+			onClick={props.onClick}
 			ref={(ref) => (button = ref)}
 			style={{ opacity: props.disabled ? '0.45' : '1' }}
 			type="button"

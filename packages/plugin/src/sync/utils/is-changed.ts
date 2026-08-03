@@ -30,23 +30,22 @@ export default function isChanged({
 	if (target.isDir !== record.isDir) return true;
 	// Compare files
 	if (!target.isDir && !record.isDir) return target.uid !== record.uid;
-	else {
-		// Compare folders
-		if (tasks)
-			// Reuse tracked file changes
-			for (const task of tasks)
-				if (
-					(task instanceof ResolveConflict ||
-						task instanceof Upload ||
-						task instanceof Download) &&
-					isSub(key, task.key)
-				)
-					return true;
-		for (const [subPath, stats] of currentStats) {
-			// Check for subfolder changes
-			if (!stats.isDir || !isSub(key, subPath)) continue;
-			if (!records.get(subPath)) return true;
-		}
+	// Compare folders
+	if (tasks)
+		// Reuse tracked file changes
+		for (const task of tasks)
+			if (
+				(task instanceof ResolveConflict ||
+					task instanceof Upload ||
+					task instanceof Download) &&
+				isSub(key, task.key)
+			)
+				return true;
+	for (const [subPath, stats] of currentStats) {
+		// Check for subfolder changes
+		if (!stats.isDir || !isSub(key, subPath)) continue;
+		if (!records.get(subPath)) return true;
 	}
+
 	return false;
 }

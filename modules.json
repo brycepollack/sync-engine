@@ -2,10 +2,19 @@
 	{
 		"id": "webdav",
 		"name": "WebDAV",
-		"version": "0.1.6",
+		"version": "0.1.7",
 		"description": "WebDAV backend support.",
 		"icon": "server",
 		"main": "https://sync.consensia.cc/modules/webdav.js",
+		"minPluginVersion": "3.0.0-beta-19"
+	},
+	{
+		"id": "s3",
+		"name": "S3",
+		"version": "0.0.1",
+		"description": "S3 and S3-compatible backend support.",
+		"icon": "server",
+		"main": "https://sync.consensia.cc/modules/s3.js",
 		"minPluginVersion": "3.0.0-beta-19"
 	},
 	{

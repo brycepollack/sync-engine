@@ -2,6 +2,8 @@
 
 A wrapper is a factory function around a [file system](./file-system) `Fs` instance that intercepts the behavior of the original FS. A wrapper function receives the original FS in the first argument and returns an `Fs`. Overlay wrappers return a `WrappedFs` with an `original` member; injection wrappers modify the supplied FS and return it. Infinite layers of overlay wrappers can be applied to the same FS instance.
 
+The SDK's canonical `prefixWrapper` API and usage example are documented in [development: file system](../development/file-system#prefixwrapper).
+
 The root FS without any wrappers is typed `RootFs`. `Fs` is the union of `RootFs` and `WrappedFs`.
 
 There are two kinds of wrappers:
@@ -27,13 +29,13 @@ Only intercept `read`, `readStream`, `write`, `writeStream` calls:
 
 - Target: local and remote `Fs`
 - Priority: `2000` for both
-- Mechanism: Microtask-batched atom queue
+- Mechanism: `setTimeout(..., 0)`-scheduled atom queue
 
 ### Optimization Companion Wrapper
 
 - Target: local and remote `Fs`
 - Priority: `21000` for both
-- Behavior: injects `read()` and `readStream()` methods that add keys to the local or remote optimization pool.
+- Behavior: injects `read()` and `readStream()` methods that add keys to the opposite-side optimization pool and probe the opposite-side FS.
 
 ### Backend-Dependent Optimization
 
@@ -43,20 +45,22 @@ Backends may extend `RootFs` with backend-specific methods. The batch optimizer 
 
 ### Operation Coalescing
 
-Coalescing exploits the JS event loop: raw tasks initiate in parallel, but their synchronous setup executes within the same microtask drain cycle before hitting the first unresolved promise. Since the wrapper ensures only file operations are pending at this boundary, it captures the full operation set immediately upon microtask flush.
+Coalescing uses a zero-delay timer: mutations are queued synchronously, and the timer flush captures operations added before it runs. The optimization wrapper keeps separate `Set<string>` pools for local and remote keys.
 
 **Interception Rules**:
 
 1. Mutations (`delete`, `mkdir`, `move`): Enqueued as `InputAtom`s.
-2. Reads (`read`, `readStream`): The companion wrapper pushes keys into the local or remote pool. The opposite-side optimization wrapper drains that pool.
+2. Reads (`read`, `readStream`): The companion wrapper adds `stat.key` to the opposite-side `Set` and probes that FS with the same key and stat. The opposite-side optimization wrapper consumes a matching needle, records its transformed key, and terminates the probe.
 3. Writes (`write`, `writeStream`):
-   - Reuses deferred execution if a pending anticipated write exists for `stat.key`.
+   - Reuses deferred execution if a pending anticipated write exists for the delegated key.
    - Passes through otherwise.
-4. Pass-through: `getUid`, `read`, `readStream`, `stat`, `exists`, and `list` bypass optimization. `checkConnection` belongs to the remote backend entry, not `Fs`.
+4. Pass-through: ordinary `read` and `readStream` calls, plus `getUid`, `stat`, `exists`, and `list`, delegate to the original FS. Reads still intercept matching needle probes. `checkConnection` belongs to the remote backend entry, not `Fs`.
 
 **Execution**:
 
-On microtask flush, the wrapper drains queued atoms and anticipates opposite-side pool keys into synthetic `write` atoms. These are passed to the injected `batchOptimizer`. Single-atom queues execute directly without batching. Queued atoms share real execution and deferred promises via `createCachedPromise()`.
+On timer flush, the wrapper drains queued atoms and transformed keys into synthetic `write` atoms. Each anticipated write is stored in a key-based pending-write map; the later `write()` or `writeStream()` for that key supplies its real execution and reuses the deferred promise. These atoms are passed to the injected `batchOptimizer`. Single-atom queues execute directly without batching. Queued atoms share real execution and deferred promises via `createCachedPromise()`.
+
+Every input atom has `resolve` and `reject` callbacks. Optimizers must propagate operation failures by rejecting the affected atoms, including when a custom atom replaces them or a batch returns per-key failures. Removed atoms must always be settled, or their original promises remain pending.
 
 ## Asymmetric Storage Wrapper
 
@@ -103,3 +107,11 @@ Intercept all `Fs` methods except `getUid()`. Wrap all method calls with a throw
 ## Debug Wrapper
 
 The development-only `debugWrapper` overlays an FS and logs every method call. It is exported from the SDK development entrypoint and is not part of the runtime wrapper chain.
+
+### Prefix Wrapper
+
+`prefixWrapper` is an importable SDK wrapper for exposing a directory as the root of another `Fs`:
+
+Its type is `prefixWrapper(original: Fs, prefix: string): WrappedFs`.
+
+The wrapper normalizes `prefix` as a unified directory key: Unicode is normalized, percent-encoded path segments are decoded, empty slash segments are removed, and a trailing `/` is added. It prepends the normalized prefix when delegating file-system operations. Returned stat keys, list results, and list progress paths have the prefix removed; the wrapped directory itself is exposed as `/` and omitted from recursive list results. A returned path outside the prefix is rejected with an error.

@@ -20,10 +20,10 @@ test('rate limiter middleware queues second request until first resolves', async
 		text: () => 'second',
 	};
 	const firstDeferred = deferred<typeof firstResponse>();
-	const harness = request(async (params) => {
+	const harness = request((params) => {
 		const url = typeof params === 'string' ? params : params.url;
-		if (url === 'first.md') return await firstDeferred.promise;
-		return secondResponse;
+		if (url === 'first.md') return firstDeferred.promise;
+		return Promise.resolve(secondResponse);
 	});
 	const wrapped = rateLimiterMiddleware(harness.request, { maxConcurrency: 1, minInterval: 0 });
 
