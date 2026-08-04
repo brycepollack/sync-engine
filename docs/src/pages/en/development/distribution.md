@@ -27,7 +27,7 @@ type ModuleMeta = {
   name: string; // Display name shown in Module Management UI
   version: string; // Semver-compatible; used for update comparison
   description: string; // One-line description
-  main: string; // Absolute URL to the built .js file
+  main: string; // Absolute URL to the built .js file to download from
   icon?: string; // Optional. Defaults to 'puzzle'
   minPluginVersion?: string; // Optional. Module skipped if plugin version is lower
   integrity: string; // Required. 64-character hex SHA-256 hash of the module file
@@ -54,9 +54,9 @@ Users can add or remove source URLs via the **Edit sources** modal in the Module
 
 ## Local Storage
 
-Modules are stored at `<vault>/.obsidian/plugins/sync-engine/modules/<id>.js`. The filename uses only the module `id` — no version number or `~` separator.
+Modules are stored at `<vault>/.obsidian/plugins/sync-engine/modules/<id>.js`.
 
-Version and metadata are persisted in IndexedDB (`AugmentedModuleMeta`), not in the filename. For details, see [deep dive: extensibility](../deep-dive/extensibility#local-module-storage).
+Version and metadata are persisted in IndexedDB (`AugmentedModuleMeta`). For details, see [deep dive: extensibility](../deep-dive/extensibility#local-module-storage).
 
 ## Auto-Update
 
@@ -98,4 +98,4 @@ const integrity = await sha256(source);
 function sha256(input: string): Promise<string>;
 ```
 
-The function encodes the input string with `TextEncoder` and digests it via `crypto.subtle.digest('SHA-256', ...)`, returning the hash as a lowercase hex string. It is a dev export (from `sdk/dev.ts`) because integrity is computed at build time, not at runtime.
+It is a dev export (from `sdk/dev.ts`) because module integrity is computed at build time, not at runtime. This is the identical function that Sync Engine uses internally to verify integrity.

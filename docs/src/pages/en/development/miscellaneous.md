@@ -35,12 +35,12 @@ When `needMigration` returns false or is omitted, `apply` runs immediately. When
 
 ### `/dev` runtime exports
 
-| Export           | Description                                                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `debugWrapper`   | FS wrapper that logs calls. See [debug and testing](./debug-and-testing#debugwrapper).                               |
-| `testKit`        | Test harness utilities. See [debug and testing](./debug-and-testing#testkit).                                        |
-| `obsidianBridge` | Tsdown plugin rewriting `obsidian` imports. See [writing a module](./develop-a-module#scaffolding-a-module-project). |
-| `sha256`         | SHA-256 hash utility. See [distribution](./distribution#computing-integrity-with-sha256).                            |
+| Export                | Description                                                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `debugWrapper`        | FS wrapper that logs calls. See [debug and testing](./debug-and-testing#debugwrapper).                               |
+| `testKit`             | Test harness utilities. See [debug and testing](./debug-and-testing#testkit).                                        |
+| `syncEngineTransform` | Tsdown plugin rewriting `obsidian` imports. See [writing a module](./develop-a-module#scaffolding-a-module-project). |
+| `sha256`              | SHA-256 hash utility. See [distribution](./distribution#computing-integrity-with-sha256).                            |
 
 ### Root type exports
 

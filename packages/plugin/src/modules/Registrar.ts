@@ -216,6 +216,7 @@ class SettingTab extends PluginSettingTab {
 		private readonly settingRegistry: Set<SettingEntry>,
 	) {
 		super(plugin.app, plugin);
+		this.icon = 'cpu';
 	}
 
 	display(): void {

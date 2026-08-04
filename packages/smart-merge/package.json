@@ -18,9 +18,6 @@
 		"check": "tsc && oxlint && oxfmt --check",
 		"tests": "bun --preload=./test/mocks.ts test"
 	},
-	"dependencies": {
-		"obsidian": "latest"
-	},
 	"devDependencies": {
 		"@hesprs/sync-engine-sdk": "workspace:*",
 		"@repo/shared": "workspace:*",

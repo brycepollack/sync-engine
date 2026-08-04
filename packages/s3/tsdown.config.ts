@@ -1,4 +1,4 @@
-import { obsidianBridge } from '@hesprs/sync-engine-sdk/dev';
+import { syncEngineTransform } from '@hesprs/sync-engine-sdk/dev';
 import { defineConfig } from 'tsdown';
 
 const dev = process.env.MODE === 'dev';
@@ -11,5 +11,5 @@ export default defineConfig({
 	minify: true,
 	outExtensions: () => ({ js: '.js' }),
 	outputOptions: { codeSplitting: false },
-	plugins: [obsidianBridge()],
+	plugins: [syncEngineTransform()],
 });

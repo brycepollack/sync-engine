@@ -43,5 +43,14 @@
 		"icon": "combine",
 		"main": "https://sync.consensia.cc/modules/smart-merge.js",
 		"minPluginVersion": "3.0.0-beta-19"
+	},
+	{
+		"id": "debug",
+		"name": "Debug",
+		"version": "0.0.1",
+		"description": "Temporary module for debug purpose.",
+		"icon": "bug",
+		"main": "https://sync.consensia.cc/modules/debug.js",
+		"minPluginVersion": "3.0.0-beta-20"
 	}
 ]

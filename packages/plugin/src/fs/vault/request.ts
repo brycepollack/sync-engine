@@ -1,6 +1,6 @@
 import type { Vault, Stat, ListedFiles, App } from 'obsidian';
 import { toArrayBuffer, toUint8Array } from '@repo/shared/binary';
-import { stripEndSlash } from '@repo/shared/path';
+import { isFolder, stripEndSlash } from '@repo/shared/path';
 import { TFile, TFolder } from 'obsidian';
 import type { Binary } from '@/types';
 
@@ -86,7 +86,7 @@ export default function createVaultRequest(app: App): VaultRequest {
 			return adapter.exists(path, true) as never;
 		}
 		if (method === 'STAT') {
-			if (key === '/') return { ctime: 0, mtime: 0, size: 0, type: 'folder' } as never;
+			if (isFolder(key)) return { ctime: 0, mtime: 0, size: 0, type: 'folder' } as never;
 			if (canUseCache() && (params.headers?.cached ?? true)) {
 				const file = vault.getAbstractFileByPath(path);
 				if (file instanceof TFile) return { ...file.stat, type: 'file' } as never;

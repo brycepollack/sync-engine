@@ -60,6 +60,8 @@ export default class EventBus {
 			}),
 			on('logSync', (log) => putSyncLog(log)),
 			on('errorSync', (log) => putSyncLog(log, 'error')),
+			on('logGeneral', (log) => putGeneralLog(log)),
+			on('errorGeneral', (log) => putGeneralLog(log, 'error')),
 			on('executionStarted', (tasks) => {
 				getThisSync().totalTasks = tasks.length;
 				putSyncLog(`Execution of ${tasks.length} sync task(s) started.`);

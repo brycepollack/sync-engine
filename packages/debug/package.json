@@ -1,11 +1,11 @@
 {
-	"name": "s3",
+	"name": "debug",
 	"version": "0.0.1",
 	"private": true,
 	"license": "MIT",
 	"contributors": [
 		{
-			"name": "Hēsperus",
+			"name": "Hēsperus",
 			"email": "hesprs@outlook.com",
 			"github": "hesprs"
 		}
@@ -20,7 +20,6 @@
 	},
 	"devDependencies": {
 		"@hesprs/sync-engine-sdk": "workspace:*",
-		"@repo/shared": "workspace:*",
-		"hash-wasm": "^4.12.0"
+		"@repo/shared": "workspace:*"
 	}
 }

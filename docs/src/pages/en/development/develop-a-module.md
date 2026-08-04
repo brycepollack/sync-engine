@@ -23,8 +23,6 @@ If your module needs to use Obsidian API, you can add:
 bun add obsidian
 ```
 
-Sync Engine modules can use Obsidian API as normal, and Obsidian must be a `dependency` to prevent Tsdown from bundling it.
-
 :::
 
 Then we need to populate the project with some setup, a typical Sync Engine module has the structure like:
@@ -47,7 +45,7 @@ your-module
 Create `tsdown.config.ts` and write following content:
 
 ```TypeScript
-import { obsidianBridge } from '@hesprs/sync-engine-sdk/dev';
+import { syncEngineTransform } from '@hesprs/sync-engine-sdk/dev';
 import { defineConfig } from 'tsdown';
 
 const dev = process.env.MODE === 'dev';
@@ -55,15 +53,15 @@ const dev = process.env.MODE === 'dev';
 export default defineConfig({
 	clean: !dev,
 	dts: false,
-	entry: { 'your-module-name': 'src/index.ts' },
+	entry: { 'your-module-id': 'src/index.ts' },
 	minify: true,
 	outExtensions: () => ({ js: '.js' }),
 	outputOptions: { codeSplitting: false },
-	plugins: [obsidianBridge()],
+	plugins: [syncEngineTransform()],
 });
 ```
 
-This config makes Tsdown output a single minified JavaScript file, which can be directly loaded by Sync Engine core. The `obsidianBridge` plugin makes you able to use Obsidian API directly in your module.
+This config makes Tsdown output a single minified JavaScript file, which can be directly loaded by Sync Engine core. The `syncEngineTransform` plugin makes you able to use Obsidian API directly in your module.
 
 Finally add following commands to your `package.json`:
 
@@ -113,7 +111,7 @@ Every module:
 
 - You can use Node.js and Browser APIs in your module, but if you need mobile compatibility, please avoid using Node.js API.
 - Use **Sentence case** for all UI text, this is an Obsidian standard.
-- Access **Obsidian API** directly via `obsidian` import (this is bridged gracefully via `obsidianBridge`).
+- Access **Obsidian API** directly via `obsidian` import (this is bridged gracefully via `syncEngineTransform`).
 - Register i18n resources first so that later registration can use them.
 - Unregister all registered capabilities during disposal.
 
