@@ -7,7 +7,7 @@ import type { Binary } from '@/types';
 type VaultRequestParam =
 	| { method: 'GET'; key: string }
 	| { method: 'GET_STREAM'; key: string }
-	| { method: 'POST'; key: string; value: Binary; headers?: { mtime?: number; ctime?: number } }
+	| { method: 'PUT'; key: string; value: Binary; headers?: { mtime?: number; ctime?: number } }
 	| { method: 'APPEND'; key: string; value: Binary; headers?: { mtime?: number; ctime?: number } }
 	| { method: 'DELETE'; key: string; headers?: { permanent?: boolean } }
 	| { method: 'MOVE'; key: string; headers: { destination: string } }
@@ -19,7 +19,7 @@ type VaultRequestParam =
 type VaultRequestResponseMap = {
 	GET: Binary;
 	GET_STREAM: ReadableStream<Binary>;
-	POST: void;
+	PUT: void;
 	APPEND: void;
 	DELETE: void;
 	MOVE: void;
@@ -68,7 +68,7 @@ export default function createVaultRequest(app: App): VaultRequest {
 			if (!response.body) throw new Error('Streaming vault file is not supported!');
 			return response.body as never;
 		}
-		if (method === 'POST')
+		if (method === 'PUT')
 			return adapter.writeBinary(path, toArrayBuffer(params.value), params.headers) as never;
 		if (method === 'APPEND')
 			return adapter.appendBinary(path, toArrayBuffer(params.value), params.headers) as never;

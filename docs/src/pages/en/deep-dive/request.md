@@ -51,7 +51,7 @@ type VaultRequest = <T extends VaultRequestParam>(
 ) => Promise<VaultRequestResponseMap[T['method']]>;
 ```
 
-Supported methods are `GET`, `GET_STREAM`, `POST`, `APPEND`, `DELETE`, `MOVE`, `MKDIR`, `EXISTS`, `STAT`, and `LIST`. The method determines both required parameters and response type.
+Supported methods are `GET`, `GET_STREAM`, `PUT`, `APPEND`, `DELETE`, `MOVE`, `MKDIR`, `EXISTS`, `STAT`, and `LIST`. The method determines both required parameters and response type.
 
 `createVaultRequest(app)` captures `app.vault`, its `DataAdapter`, and `app.workspace`. `Registrar` applies local request middleware before injecting the function into `VaultFs`.
 
@@ -65,7 +65,7 @@ Before calling the adapter, `VaultRequest` removes a trailing slash from every n
 
 - `GET`: `adapter.readBinary()`, converted to `Binary`.
 - `GET_STREAM`: fetches `adapter.getResourcePath(path)` and returns `response.body`; throws when no body is available. File read streaming is achieved in this way.
-- `POST`: `adapter.writeBinary()`, converting `Binary` to `ArrayBuffer` and forwarding optional `mtime`/`ctime` headers.
+- `PUT`: `adapter.writeBinary()`, converting `Binary` to `ArrayBuffer` and forwarding optional `mtime`/`ctime` headers.
 - `APPEND`: `adapter.appendBinary()` with the same conversion and headers.
 - `DELETE`: permanent deletes call `adapter.remove()`. Otherwise it follows the vault trash setting, falling back to `trashLocal()` when `trashSystem()` fails.
 - `MOVE`: `adapter.rename()` to the normalized destination path.

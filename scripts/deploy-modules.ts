@@ -1,5 +1,5 @@
-// oxlint-disable import/no-nodejs-modules
-import { mkdir } from 'fs/promises';
+// oxlint-disable import/no-nodejs-modules no-console
+import { mkdir } from 'node:fs/promises';
 import modules from '../modules.json' with { type: 'json' };
 import sha256 from '../packages/plugin/src/utils/sha-256';
 

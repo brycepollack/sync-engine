@@ -12,18 +12,6 @@ export default class Debug {
 	}
 
 	start = () => {
-		const time = window.setTimeout(
-			() =>
-				void this.ctx
-					.getRecordStore()
-					.keys()
-					.then((keys) =>
-						this.log(
-							keys.length ? `Record has ${keys.length} items.` : 'Record is empty.',
-						),
-					),
-			3000,
-		);
 		this.cleanup.push(
 			this.ctx.registerSetting({
 				apply: (el) => {
@@ -36,7 +24,14 @@ export default class Debug {
 				},
 				priority: 10_000,
 			}),
-			() => window.clearTimeout(time),
+			this.ctx.registerLocalRequestMiddleware({
+				apply: (request) => (params) => {
+					if (params.method === 'LIST' || params.method === 'STAT')
+						params.headers = { cached: false };
+					return request(params);
+				},
+				priority: 1243,
+			}),
 		);
 	};
 

@@ -3,13 +3,13 @@ This is the monorepo for an extensible Obsidian syncing plugin to sync vault fil
 ## Context
 
 - When exploring the repo, you must read related pages in `docs/src/pages/en/`, especially inside the `deep-dive/` folder: this is the fastest way to understand the engineering sophistication.
-- This repo is also an Obsidian vault. The config folder is at `.obsidian`, and plugin dist folder is symlinked to `.obsidian/plugins/sync-engine`. The folder also contains plugin settings `data.json` and module binaries.
+- This repo is also an Obsidian vault used for testing. The config folder is at `.obsidian`, and plugin dist folder is symlinked to `.obsidian/plugins/sync-engine`. The folder also contains plugin settings `data.json` and module binaries.
 
 ## Techstack
 
 - **TypeScript 7** as programming language
 - **Bun** as its package manager and task runner
-- **Turbo** for monorepo management
+- **Turbo** for monorepo orchestration
 - **Tsdown** for building
 - **Oxlint and Oxfmt** for linting and formatting
 - **Solid.js** and **TailwindCSS** (via UnoCSS) for UI
@@ -21,6 +21,7 @@ This is the monorepo for an extensible Obsidian syncing plugin to sync vault fil
 
 - `bun dev:plugin`: build plugin without cleaning dist
 - `bun dev:docs`: start docs dev server
+- `bun build:docs`: build docs website
 - `bun fix`: format and fix fixable lint errors (always run before `bun check`).
 - `bun check`: check types, lint and format (no file change).
 - `bun dev`: building without clearing dist.

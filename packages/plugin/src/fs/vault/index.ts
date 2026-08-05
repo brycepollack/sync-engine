@@ -33,7 +33,7 @@ export default class VaultFs implements RootFs {
 	}
 
 	async write(key: string, value: Binary): Promise<string> {
-		await this.request({ key, method: 'POST', value });
+		await this.request({ key, method: 'PUT', value });
 		return getFileUid(this, key);
 	}
 

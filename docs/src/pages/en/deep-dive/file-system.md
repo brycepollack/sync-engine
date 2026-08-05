@@ -16,7 +16,7 @@ Vault file system consumes [`VaultRequest`](./request#vault-request), a typed op
 
 `readStream()`: delegates to `GET_STREAM`, which fetches `vault.adapter.getResourcePath(path)` and returns the response body. It throws if no response body is available.
 
-`write()`: delegates to `POST`, then calls `this.stat()` and returns the file UID.
+`write()`: delegates to `PUT`, then calls `this.stat()` and returns the file UID.
 
 `writeStream()`:
 

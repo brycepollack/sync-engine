@@ -5,6 +5,7 @@ test-files
 .trash
 .obsidianignore
 Sync Engine Logs
+scripts/benchmark/result.json
 .vscode
 **/dist-plugin
 **/dist

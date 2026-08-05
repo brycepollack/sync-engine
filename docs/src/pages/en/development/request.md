@@ -31,7 +31,7 @@ Local vault operation function used by the local filesystem. Modules rarely inte
 type VaultRequestParam =
   | { method: 'GET'; key: string }
   | { method: 'GET_STREAM'; key: string }
-  | { method: 'POST'; key: string; value: Binary; headers?: { mtime?: number; ctime?: number } }
+  | { method: 'PUT'; key: string; value: Binary; headers?: { mtime?: number; ctime?: number } }
   | { method: 'APPEND'; key: string; value: Binary; headers?: { mtime?: number; ctime?: number } }
   | { method: 'DELETE'; key: string; headers?: { permanent?: boolean } }
   | { method: 'MOVE'; key: string; headers: { destination: string } }

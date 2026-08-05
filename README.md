@@ -71,7 +71,7 @@ Sync Engine fits the gap: you want to choose your own storage, you want the plug
 
 ### Module-Extended
 
-- **Backends**: WebDAV
+- **Backends**: WebDAV, S3
 - **Features**: Encryption, Smart Merge Conflict Resolution
 
 ### Extensible Architecture

@@ -119,7 +119,8 @@
 		"typescript/switch-exhaustiveness-check": "off",
 		"eslint/no-loop-func": "off",
 		"eslint/radix": "off",
-		"unicorn/import-style": "off"
+		"unicorn/import-style": "off",
+		"unicorn/no-process-exit": "off"
 	},
 	"env": {
 		"builtin": true,

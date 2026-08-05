@@ -1,6 +1,7 @@
 {
 	"name": "@hesprs/sync-engine-sdk",
 	"version": "3.0.0",
+	"description": "Official SDK for developing modules targeting Sync Engine, the extensible Obsidian syncing plugin.",
 	"keywords": [
 		"obsidian-plugin",
 		"sdk",
@@ -17,7 +18,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/hesprs/sync-engine.git"
+		"url": "git+https://github.com/hesprs/obsidian-webdav-sync.git"
 	},
 	"files": [
 		"./dist"
@@ -37,7 +38,8 @@
 		}
 	},
 	"publishConfig": {
-		"access": "public"
+		"access": "public",
+		"provenance": true
 	},
 	"scripts": {
 		"dev:plugin": "MODE=dev BUILD=plugin tsdown",
@@ -49,7 +51,7 @@
 		"tests": "bun --preload=./test/mocks test"
 	},
 	"dependencies": {
-		"obsidian": "latest"
+		"obsidian": "^1.13.1"
 	},
 	"devDependencies": {
 		"@repo/shared": "workspace:*",
