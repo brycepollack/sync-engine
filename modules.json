@@ -47,7 +47,7 @@
 	{
 		"id": "debug",
 		"name": "Debug",
-		"version": "0.0.2",
+		"version": "0.0.3",
 		"description": "Temporary module for debug purpose.",
 		"icon": "bug",
 		"main": "https://sync.consensia.cc/modules/debug.js",
