@@ -1,6 +1,5 @@
 import type { Context, Dispatch, Events } from '@hesprs/sync-engine-sdk';
-import { isFolder } from '@repo/shared/path';
-import { Setting } from 'obsidian';
+import statFs from './stat-fs';
 
 export default class Debug {
 	private readonly log: (str: string) => void;
@@ -13,16 +12,9 @@ export default class Debug {
 
 	start = () => {
 		this.cleanup.push(
-			this.ctx.registerSetting({
-				apply: (el) => {
-					new Setting(el).setName('Debug changes and export log').addButton((button) =>
-						button.setButtonText('Debug').onClick(async () => {
-							await this.compareChanged();
-							void this.ctx.exportLogs();
-						}),
-					);
-				},
-				priority: 10_000,
+			this.ctx.registerLocalFsWrapper({
+				apply: (fs) => statFs(fs, this.log),
+				priority: 1,
 			}),
 			this.ctx.registerLocalRequestMiddleware({
 				apply: (request) => (params) => {
@@ -33,36 +25,6 @@ export default class Debug {
 				priority: 1243,
 			}),
 		);
-	};
-
-	compareChanged = async () => {
-		const [records, local] = await Promise.all([
-			this.ctx.getRecordStore().entries(),
-			this.ctx
-				.createLocalFs()
-				.list('/', ({ current }) => (isFolder(current) ? 'advance' : 'include')),
-		]);
-		const localMap = new Map(local.map((stat) => [stat.key, stat]));
-		let hasChanged = false;
-		records.forEach(([key, stat]) => {
-			if (stat.isDir) return;
-			const current = localMap.get(key);
-			if (!current) {
-				this.log('Current has a file missing.');
-				return;
-			}
-			if (current.isDir) {
-				this.log('Current turns to dir.');
-				return;
-			}
-			const recordUid = stat.local;
-			const currentUid = current.uid;
-			if (recordUid !== currentUid) {
-				hasChanged = true;
-				this.log(`Current differs: ${recordUid} -> ${currentUid}.`);
-			}
-		});
-		if (!hasChanged) this.log('Nothing changed.');
 	};
 
 	dispose = () => this.cleanup.splice(0).forEach((fn) => fn());
