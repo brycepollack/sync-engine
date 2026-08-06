@@ -11,11 +11,11 @@ All benchmark results are recorded here, see [deep dive: benchmarking](../deep-d
 - **Operating system**: NixOS 26.11
 - **CPU single core score**: around 1700
 - **Backend type**: WebDAV
-- **Service**: [Nextcloud official trial](https://try.nextcloud.com/)
-- **Average ping**:
-- **Average upload speed**:
-- **Average download speed**:
+- **Service**: Self-hosted Nextcloud (delayed and bandwidth limited to simulate real service)
+- **Average ping**: 300 ms
+- **Average upload speed**: 3 MiB/s
+- **Average download speed**: 5 MiB/s
 
-| Benchmark Item  | Result  |
-| --------------- | ------- |
+| Benchmark Item       | Result  |
+| -------------------- | ------- |
 | Average startup time | 25.4 ms |

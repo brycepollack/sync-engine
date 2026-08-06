@@ -173,12 +173,12 @@ test('stat should normalize root, file, and folder keys', async () => {
 test('write should return refreshed file uid from stat', async () => {
 	const vault = createVaultStub({
 		stats: {
-			'note.md': { mtime: 456, size: 11, type: 'file' },
+			'note.md': { mtime: 456, size: 5, type: 'file' },
 		},
 	});
 	const data = bytes('hello');
 
-	expect(await vault.fs.write('note.md', data, file('note.md'))).toBe('456~11');
+	expect(await vault.fs.write('note.md', data, file('note.md'))).toBe('456~5');
 	expect(vault.calls.writeBinary).toStrictEqual([['note.md', 'hello']]);
 	expect(vault.calls.stat).toStrictEqual(['note.md']);
 });

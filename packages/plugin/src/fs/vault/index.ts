@@ -3,14 +3,26 @@ import type { ListReporter, RootFs } from '../interface';
 import type { VaultRequest } from './request';
 
 const TEMP_FOLDER = '.trash';
+const MAX_WRITE_TRIAL = 5;
 
 async function removeIfExists(fs: VaultFs, key: string, permanent?: boolean): Promise<void> {
 	if (await fs.exists(key)) await fs.delete(key, permanent);
 }
 
-async function getFileUid(fs: VaultFs, key: string): Promise<string> {
+async function getFileUid(fs: VaultFs, key: string): Promise<string>;
+async function getFileUid(
+	fs: VaultFs,
+	key: string,
+	expectedSize: number,
+): Promise<string | undefined>;
+async function getFileUid(
+	fs: VaultFs,
+	key: string,
+	expectedSize?: number,
+): Promise<string | undefined> {
 	const stat = await fs.stat(key);
-	if (stat.isDir) throw new Error(`File ${key} not found!`);
+	if (stat.isDir) throw new Error(`File "${key}" not found!`);
+	if (expectedSize !== undefined && stat.size !== expectedSize) return undefined;
 	return stat.uid;
 }
 
@@ -33,8 +45,17 @@ export default class VaultFs implements RootFs {
 	}
 
 	async write(key: string, value: Binary): Promise<string> {
-		await this.request({ key, method: 'PUT', value });
-		return getFileUid(this, key);
+		// https://github.com/hesprs/obsidian-webdav-sync/issues/178
+		// https://forum.obsidian.md/t/on-android-vault-create-intermittently-fails-to-write-file-content/102935
+		let uid: string | undefined;
+		let trial = 0;
+		do {
+			await this.request({ key, method: 'PUT', value });
+			uid = await getFileUid(this, key, value.byteLength);
+			trial++;
+		} while (!uid && trial < MAX_WRITE_TRIAL);
+		if (!uid) throw new Error('File write fails repeatedly, this is a known Android bug.');
+		return uid;
 	}
 
 	async writeStream(key: string, value: ReadableStream<Binary>): Promise<string> {
