@@ -45,7 +45,7 @@ export default class VaultFs implements RootFs {
 	}
 
 	async write(key: string, value: Binary): Promise<string> {
-		// https://github.com/hesprs/obsidian-webdav-sync/issues/178
+		// https://github.com/hesprs/sync-engine/issues/178
 		// https://forum.obsidian.md/t/on-android-vault-create-intermittently-fails-to-write-file-content/102935
 		let uid: string | undefined;
 		let trial = 0;

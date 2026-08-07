@@ -8,18 +8,18 @@
 <h4 align="center">下一代同步插件：快速 · 免费 · 模块化扩展</h4>
 
 <p align="center">
-    <a href="https://github.com/hesprs/obsidian-webdav-sync/releases/latest">
-        <img src="https://img.shields.io/github/downloads/hesprs/obsidian-webdav-sync/manifest.json.svg?style=flat&label=%E2%AC%87%20Downloads&labelColor=008811&color=333333&displayAssetName=false" alt="累计下载量">
+    <a href="https://github.com/hesprs/sync-engine/releases/latest">
+        <img src="https://img.shields.io/github/downloads/hesprs/sync-engine/manifest.json.svg?style=flat&label=%E2%AC%87%20Downloads&labelColor=008811&color=333333&displayAssetName=false" alt="累计下载量">
     </a>
-    <a href="https://github.com/hesprs/obsidian-webdav-sync/actions">
-        <img src="https://img.shields.io/github/actions/workflow/status/hesprs/obsidian-webdav-sync/ci.yml?style=flat&logo=github&logoColor=white&label=CI&labelColor=d4ab00&color=333333" alt="ci">
+    <a href="https://github.com/hesprs/sync-engine/actions">
+        <img src="https://img.shields.io/github/actions/workflow/status/hesprs/sync-engine/ci.yml?style=flat&logo=github&logoColor=white&label=CI&labelColor=d4ab00&color=333333" alt="ci">
     </a>
     <a href="https://sync.consensia.cc">
         <img src="https://img.shields.io/badge/Documentation-Ready-333333?labelColor=5C73E7&logo=vitepress&logoColor=white" alt="文档" />
     </a>
     <img src="https://img.shields.io/badge/Types-Strict-333333?logo=typescript&labelColor=blue&logoColor=white" alt="TypeScript">
     <img src="https://img.shields.io/badge/%F0%9F%96%90%EF%B8%8F%20Made%20by-Humans-333333?labelColor=15C2C0" alt="人类制造">
-    <img src="https://img.shields.io/github/stars/hesprs/obsidian-webdav-sync" alt="GitHub stars">
+    <img src="https://img.shields.io/github/stars/hesprs/sync-engine" alt="GitHub stars">
 </p>
 
 <p align="center">
@@ -42,6 +42,8 @@
 Sync Engine 是一个革命性的 Vault 同步解决方案。它不仅是一个同步插件，更是一个人人都可以为其构建生态的模块化平台。
 
 插件核心仅提供基础设施，所有的后端支持（WebDAV、S3、GDrive）和功能（国际化、性能优化、同步策略）均由可组合的模块提供。您和您的 AI Agent 可以通过便捷的 SDK 开发专属模块、扩展插件功能并贡献给社区，全程无需修改核心源代码。
+
+访问 Sync Engine 的官方文档：[`sync.consensia.cc`](https://sync.consensia.cc)，其中包含使用指南、现有模块列表、权限声明、性能基准测试以及如何构建模块。
 
 目前已经有不少用于在设备间同步笔记的插件：
 
@@ -74,33 +76,30 @@ Sync Engine 恰好填补了这一空白：您可以自由选择存储服务，�
 - 插件内置专门的模块探索与管理 UI。
 - 只要符合[贡献指南](./CONTRIBUTING.md)，本仓库欢迎任何模块贡献。
 
-### 激进的性能优化
+### 激进优化
 
-- 增量同步，绝不每次都上传整个 Vault。
-- [锚定非对称存储（Anchored Asymmetric Storage）](https://sync.consensia.cc/deep-dive/asymmetric-storage) 技术大幅提速同步过程。
-- 实时同步使用缓存的远程状态，可在数毫秒内完成。
-- 体积比 Remotely Save 小 **40 倍**，启动速度快 **20 倍**。
-- 轻松胜任包含数千个文件的 Vault。
-- 速度不亚于自建服务器。
-- 详细的性能对比请参阅 [性能基准测试](https://sync.consensia.cc/usage/benchmark)。
+- 增量同步机制：从不重复上传整个 Vault。
+- 采用 [锚定非对称存储](https://sync.consensia.cc/deep-dive/asymmetric-storage) 技术，大幅提升同步速度。
+- 实时同步依托于缓存的远程状态，耗时可控制在毫秒级以内。
+- [基准测试表明，日常同步效率约为 Remotely Save 的 100 倍](https://sync.consensia.cc/usage/benchmark)。
+- 即使处理包含数千个文件的 Vault 依然流畅无压力。
+- 同步速度丝毫不亚于自建服务器。
+- 详细的性能对比数据可查阅 [性能基准测试](https://sync.consensia.cc/usage/benchmark)。
 
 ## 安装与设置
 
-Sync Engine v3 目前处于 Beta 测试阶段，您可以通过 BRAT 进行安装：
+使用 Sync Engine 非常简单：
 
-1. 打开 **社区插件（Community plugins）** 并搜索 `BRAT`。
-2. 安装并启用该插件。
-3. 点击 **Add beta plugin**，在 _repository_ 输入框中填写 `https://github.com/hesprs/obsidian-webdav-sync`。
-4. 选择 _Latest_ 并安装 + 启用 Sync Engine。
-
-配置步骤：
-
-1. 进入插件设置，找到 **模块管理（Module management）**，打开管理面板。
-2. 浏览并安装所需的语言包和存储后端。
-3. 配置您的后端，连通性自动检查结果会以图标形式展示在 **存储后端（Storage backend）** 设置项中。
-4. 通过命令面板或侧边栏图标启动您的第一次同步。
+1. 从 Obsidian 插件商店下载并启用 `Sync Engine`。
+2. 打开“模块管理”面板，安装所需的翻译、后端以及可选功能。
+3. 在设置界面中填写云服务所需的信息。
+4. 从命令面板或边栏按钮启动您的首次同步。
 5. 预览即将执行的同步任务。
-6. 点击“确认”，您的文件将以光速同步至配置好的后端。
+6. 点击“确认”，您的文件就会以光速传输至配置好的后端。
+
+## 开发模块
+
+Sync Engine 欢迎大家开发并贡献模块。详细的模块开发文档可在 [Sync Engine 官网](https://sync.consensia.cc/development/develop-a-module) 查阅。模块贡献标准请参阅 [CONTRIBUTING](https://sync.consensia.cc/usage/contributing)。
 
 ## 常见问题
 
@@ -108,13 +107,13 @@ Sync Engine v3 目前处于 Beta 测试阶段，您可以通过 BRAT 进行安�
 
 您可以直接尝试重新同步。个别错误不会阻塞后续的同步，也不会损坏您的文件。
 
-如果重试后错误依然存在，请 [提交 Issue](https://github.com/hesprs/obsidian-webdav-sync/issues/new)，附上错误描述、您的配置环境以及支持日志（Support log）。
+如果重试后错误依然存在，请 [提交 Issue](https://github.com/hesprs/sync-engine/issues/new)，附上错误描述、您的配置环境以及支持日志（Support log）。
 
 </details>
 
 <details><summary>使用本插件时，我应该如何管理 WebDAV 存储？</summary>
 
-根据本插件的 [文件处理策略](https://hesprs.github.io/projects/obsidian-webdav-sync#technical-breakdown)，所有远程变更都会传播到所有 Vault 中。因此通常不建议手动管理 WebDAV 存储中的文件，除非您确定要手动添加或删除这些文件。当您启用了加密或非对称存储时，更不建议进行手动干预。
+根据本插件的 [文件处理策略](https://hesprs.github.io/projects/sync-engine#technical-breakdown)，所有远程变更都会传播到所有 Vault 中。因此通常不建议手动管理 WebDAV 存储中的文件，除非您确定要手动添加或删除这些文件。当您启用了加密或非对称存储时，更不建议进行手动干预。
 
 </details>
 

@@ -114,10 +114,7 @@ export default class Extensibility {
 
 	private readonly loadAllModules = async () => {
 		const { adapter } = this.ctx.app.vault;
-		if (!(await adapter.exists(this.moduleDir))) {
-			await adapter.mkdir(this.moduleDir);
-			return;
-		}
+		if (!(await adapter.exists(this.moduleDir))) await adapter.mkdir(this.moduleDir);
 		const { factory, execute } = this.createOperationFactory();
 		const [{ files, folders }, recordedModules] = await Promise.all([
 			adapter.list(this.moduleDir),
@@ -415,7 +412,9 @@ async function migrateModules({
 }) {
 	const moduleIdMap: Record<string, string> = {
 		Encryption: 'encryption',
+		'I18n Русский': 'i18n-ru',
 		'I18n 简体中文': 'i18n-zh',
+		'I18n 繁體中文': 'i18n-zh-TW',
 		'Smart Merge': 'smart-merge',
 		WebDAV: 'webdav',
 	};

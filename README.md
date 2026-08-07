@@ -8,20 +8,22 @@
 <h4 align="center">The next-generation syncing plugin: Fast · Free · Extend with Modules</h4>
 
 <p align="center">
-    <a href="https://github.com/hesprs/obsidian-webdav-sync/releases/latest">
-        <img src="https://img.shields.io/github/downloads/hesprs/obsidian-webdav-sync/manifest.json.svg?style=flat&label=%E2%AC%87%20Downloads&labelColor=008811&color=333333&displayAssetName=false" alt="accumulated downloads">
+    <a href="https://github.com/hesprs/sync-engine/releases/latest">
+        <img src="https://img.shields.io/github/downloads/hesprs/sync-engine/manifest.json.svg?style=flat&label=%E2%AC%87%20Downloads&labelColor=008811&color=333333&displayAssetName=false" alt="accumulated downloads">
     </a>
-    <a href="https://github.com/hesprs/obsidian-webdav-sync/actions">
-        <img src="https://img.shields.io/github/actions/workflow/status/hesprs/obsidian-webdav-sync/ci.yml?style=flat&logo=github&logoColor=white&label=CI&labelColor=d4ab00&color=333333" alt="ci">
+    <a href="https://github.com/hesprs/sync-engine/actions">
+        <img src="https://img.shields.io/github/actions/workflow/status/hesprs/sync-engine/ci.yml?style=flat&logo=github&logoColor=white&label=CI&labelColor=d4ab00&color=333333" alt="ci">
     </a>
     <a href="https://sync.consensia.cc">
         <img src="https://img.shields.io/badge/Documentation-Ready-333333?labelColor=5C73E7&logo=vitepress&logoColor=white" alt="Documentation" />
     </a>
     <img src="https://img.shields.io/badge/Types-Strict-333333?logo=typescript&labelColor=blue&logoColor=white" alt="TypeScript">
     <img src="https://img.shields.io/badge/%F0%9F%96%90%EF%B8%8F%20Made%20by-Humans-333333?labelColor=15C2C0" alt="Made by Humans">
-    <img src="https://img.shields.io/github/stars/hesprs/obsidian-webdav-sync" alt="GitHub stars">
+    <a href="https://www.npmjs.com/package/@hesprs/sync-engine-sdk">
+        <img src="https://img.shields.io/npm/v/@hesprs/sync-engine-sdk?logo=npm&labelColor=red&logoColor=white&color=333333" alt="npm">
+    </a>
+    <img src="https://img.shields.io/github/stars/hesprs/sync-engine" alt="GitHub stars">
 </p>
-
 
 <p align="center">
     <a href="https://github.com/hesprs/synthkernel">
@@ -49,6 +51,8 @@
 Sync Engine is a revolutionary solution for vault syncing. Its not only a syncing plugin, it is a modular platform that everyone can build upon.
 
 The core ships the infrastructure, and all backends (WebDAV, S3, GDrive) and features (i18n, optimization, sync strategy) come from composable modules. You and your AI agents can build your own modules via convenient SDK, extend the plugin, contribute to community, all without modifying the source code.
+
+Access Sync Engine documentation at [`sync.consensia.cc`](https://sync.consensia.cc), which contains usage guides, existing modules, permission claims, benchmarking, and documentation on how to build a module.
 
 There's already a lot of plugins to sync your notes between devices:
 
@@ -86,28 +90,23 @@ Sync Engine fits the gap: you want to choose your own storage, you want the plug
 - Incremental syncing never uploads the full vault each time.
 - [Anchored Asymmetric Storage](https://sync.consensia.cc/deep-dive/asymmetric-storage) technology substantially accelerates syncing.
 - Real-time sync uses cached remote states, allowing it to complete within milliseconds.
-- **40 times** smaller size than Remotely Save, **20 times** faster startup time.
+- [Benchmarking shows around **100x** faster than Remotely Save in daily syncing](https://sync.consensia.cc/usage/benchmark).
 - Handles vaults with thousands of files smoothly.
 - No slower than a self-hosted server
 - Detailed performance comparison can be found in [performance benchmark](https://sync.consensia.cc/usage/benchmark).
 
-## Install & Setup
+## Usage
 
-Sync Engine v3 is in beta testing, you can install via BRAT:
-
-1. Go to **Community plugins** and search for `BRAT`.
-2. Install and enable it.
-3. Click **Add beta plugin** and fill `https://github.com/hesprs/obsidian-webdav-sync` into _repository_.
-4. Select _Latest_ and install + enable Sync Engine.
-
-Configuration:
-
-1. Go to plugin settings, find **Module management**, open the panel.
-2. Browse and install needed translations and backends.
-3. Configure your backend, automatic connectivity check is shown as an icon inside **Storage backend** entry.
+1. Download and enable `Sync Engine` from Obsidian plugin store.
+2. Open "Module management" panel, install needed translations, backends and optional features.
+3. Fill the necessary information about your cloud service in the settings interface.
 4. Start your first sync from command palette or ribbon button.
 5. Review the sync tasks that will be performed.
 6. Click "Confirm", and your files will arrive the configured backend at the speed of light.
+
+## Develop a Module
+
+Sync Engine welcomes everyone that would like to develop and contribute a module. The detailed module development documentation can be found in [Sync Engine website](https://sync.consensia.cc/development/develop-a-module). Module contribution standard see [CONTRIBUTING](https://sync.consensia.cc/usage/contributing).
 
 ## Common Questions
 
@@ -115,13 +114,13 @@ Configuration:
 
 You can simply retry the sync. An error does not block later syncs nor corrupt your files.
 
-If the error persists after retrying, please [open an issue](https://github.com/hesprs/obsidian-webdav-sync/issues/new), describing the error, your setup, with the support log attached.
+If the error persists after retrying, please [open an issue](https://github.com/hesprs/sync-engine/issues/new), describing the error, your setup, with the support log attached.
 
 </details>
 
 <details><summary>How should I manage my WebDAV storage when using this plugin?</summary>
 
-According to this plugin's [file handling strategy](https://hesprs.github.io/projects/obsidian-webdav-sync#technical-breakdown), all remote changes will be propagated to all vaults. So it's generally not recommended to manually manage your WebDAV storage unless you intend to add / remove these files. Manual management is more discouraged when you have encryption or asymmetric storage enabled.
+According to this plugin's [file handling strategy](https://hesprs.github.io/projects/sync-engine#technical-breakdown), all remote changes will be propagated to all vaults. So it's generally not recommended to manually manage your WebDAV storage unless you intend to add / remove these files. Manual management is more discouraged when you have encryption or asymmetric storage enabled.
 
 </details>
 

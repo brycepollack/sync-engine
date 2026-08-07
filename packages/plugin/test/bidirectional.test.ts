@@ -19,7 +19,6 @@ function folderRecord(): RecordStat {
 }
 
 const NOOP = () => {};
-
 const VOID = {} as never;
 
 type ExtractedTask = {

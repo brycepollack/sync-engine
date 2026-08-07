@@ -14,4 +14,6 @@ We are here in the _Usage_ section, you might feel interested in:
 
 - [Why Sync Engine](./why-sync-engine): why Sync Engine is different from other syncing plugins. And how to start your first sync.
 - [Settings](./settings): what does each setting of Sync Engine mean.
+- [Benchmark](./benchmark): see how Sync Engine flex on other plugins with real statistics.
 - [Security](./security), [Permissions](./permissions): the central claims made by Sync Engine, establish trust with verifiable proof.
+- [Develop a module](../development/develop-a-module): learn how to develop a Sync Engine module.

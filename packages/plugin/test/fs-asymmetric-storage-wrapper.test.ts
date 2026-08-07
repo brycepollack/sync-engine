@@ -43,7 +43,6 @@ test('list should infer folder anchors from remoteStatContext and return hierarc
 	const wrapper = asymmetricStorageWrapper(remote.fs, store);
 
 	expect(await wrapper.list('/', () => 'include')).toStrictEqual([
-		folder('/'),
 		file('root.md', { size: 1, uid: 'root-file' }),
 		folder('folder/'),
 		file('folder/child.md', { size: 2, uid: 'child-file' }),
@@ -70,7 +69,6 @@ test('list should skip malformed or orphan flattened entries without throwing', 
 	const wrapper = asymmetricStorageWrapper(remote.fs, store);
 
 	expect(await wrapper.list('/', () => 'include')).toStrictEqual([
-		folder('/'),
 		folder('folder/'),
 		file('folder/child.md', { size: 4, uid: 'child' }),
 	]);
@@ -91,6 +89,32 @@ test('mkdir should write empty folder marker file and reuse same generated ancho
 	expect(folderMarkerKey.slice(11)).toBe('folder');
 	expect(childKey).toBe(`${folderMarkerKey.slice(5, 10)}~note.md`);
 	expect(childValue).toStrictEqual(bytes('1234'));
+});
+
+test('mkdir should reuse bootstrapped anchor instead of generating a colliding one', async () => {
+	seedRemoteContext(file('00000abcde~folder'));
+	const remote = fs();
+	const wrapper = asymmetricStorageWrapper(remote.fs, store);
+	const noteStat = file('folder/note.md', { uid: 'note-uid' });
+
+	await wrapper.mkdir('folder/');
+	await wrapper.write('folder/note.md', bytes('x'), noteStat);
+
+	expect(remote.calls.write).toStrictEqual([
+		[
+			'00000abcde~folder',
+			bytes(''),
+			{
+				isDir: false,
+				key: '00000abcde~folder',
+				mtime: 0,
+				size: 0,
+				// oxlint-disable-next-line typescript/no-unsafe-assignment
+				uid: expect.any(String),
+			},
+		],
+		['abcde~note.md', bytes('x'), noteStat],
+	]);
 });
 
 test('folder move should preserve anchor and short-circuit identical flattened move', async () => {

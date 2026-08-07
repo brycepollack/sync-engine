@@ -5,10 +5,11 @@ test-files
 .trash
 .obsidianignore
 Sync Engine Logs
-scripts/benchmark/result.json
 .vscode
 **/dist-plugin
 **/dist
 **/.turbo
 **/node_modules
 **/cache
+!packages/plugin/dist
+packages/plugin/dist/**/*.js

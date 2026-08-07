@@ -1,5 +1,5 @@
-import { testKit } from '@hesprs/sync-engine-sdk/dev';
 import { test, expect } from 'bun:test';
+import { testKit } from '@/sdk/dev';
 import prefixWrapper from '@/sdk/prefix';
 
 const { bytes, file, fs: testFs, stream } = testKit;

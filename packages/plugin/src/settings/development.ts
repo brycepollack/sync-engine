@@ -33,11 +33,13 @@ export default function developmentSettings(
 		.addButton((button) =>
 			button
 				.setButtonText(translate('clearVaultRecords'))
+				.setWarning()
 				.onClick(() => void clearVaultRecords(ctx)),
 		)
 		.addButton((button) =>
 			button
 				.setButtonText(translate('clearAllRecords'))
+				.setWarning()
 				.onClick(() => void clearAllRecords(ctx)),
 		);
 

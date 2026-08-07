@@ -119,7 +119,7 @@ const en: Translations = {
 	failedToFetchSource: 'Failed to fetch source from "{{url}}"',
 	failedToLoadModule: 'Failed to load module "{{name}}"',
 	features: 'Features',
-	filterPlaceholder: 'E.g., temp.md, .trash/**/*',
+	filterPlaceholder: 'E.g. temp.md, .trash/**/*',
 	filterRules: 'Filter rules',
 	headerKeyPlaceholder: 'Header key',
 	headerValuePlaceholder: 'Header value',

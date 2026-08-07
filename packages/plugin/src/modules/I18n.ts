@@ -108,7 +108,7 @@ export default class I18n {
 		const i18n = this.i18n as Translations;
 		const value = i18n[key];
 		if (typeof value === 'string') {
-			if (params) return interpolate(value, params as never);
+			if (params) return interpolate(value, params as InterpolationValues);
 			return value;
 		}
 		if (typeof value === 'function')

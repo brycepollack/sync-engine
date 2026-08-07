@@ -1,0 +1,35 @@
+import { Binary, FileStat, FolderStat, MaybePromise, Progress, RecordStat, RecordStatsMap, Stat, StatsMap } from "./packages/plugin/src/types.spec.js";
+import { BatchOptimizer, CustomAtom, DeleteAtom, Fs, InputAtom, ListReporter, MkdirAtom, MoveAtom, OptimizerInput, OptimizerOutput, OutputAtom, RootFs, WrappedFs, WriteAtom } from "./packages/plugin/src/fs/interface.spec.js";
+import { DatabaseAsync, DatabaseSync, StoreAsync, StoreOperations, StoreSync } from "./node_modules/.bun/uni-kv@.._.._uni-kv.tgz/node_modules/uni-kv/dist/interface.spec.js";
+import { Dispatch, On } from "./packages/plugin/src/modules/EventBus.spec.js";
+import { Fragment, ObsidianLanguageCode, Translate, TranslationResource } from "./packages/plugin/src/modules/I18n.spec.js";
+import { RecordStore } from "./packages/plugin/src/modules/Storage.spec.js";
+import { BaseTask, ConflictResolver, ConflictResolverPayload, TaskNames } from "./packages/plugin/src/sync/tasks/interface.spec.js";
+import AddRecord from "./packages/plugin/src/sync/tasks/AddRecord.spec.js";
+import CreateRemoteDir from "./packages/plugin/src/sync/tasks/CreateRemoteDir.spec.js";
+import Download from "./packages/plugin/src/sync/tasks/Download.spec.js";
+import MoveLocal from "./packages/plugin/src/sync/tasks/MoveLocal.spec.js";
+import MoveRemote from "./packages/plugin/src/sync/tasks/MoveRemote.spec.js";
+import RemoveLocal from "./packages/plugin/src/sync/tasks/RemoveLocal.spec.js";
+import RemoveRecord from "./packages/plugin/src/sync/tasks/RemoveRecord.spec.js";
+import RemoveRemote from "./packages/plugin/src/sync/tasks/RemoveRemote.spec.js";
+import ResolveConflict from "./packages/plugin/src/sync/tasks/ResolveConflict.spec.js";
+import Upload from "./packages/plugin/src/sync/tasks/Upload.spec.js";
+import { Decider, DeciderInput, TaskFactory } from "./packages/plugin/src/sync/decision/interface.spec.js";
+import CreateLocalDir from "./packages/plugin/src/sync/tasks/CreateLocalDir.spec.js";
+import "./packages/plugin/src/sync/index.spec.js";
+import { SyncTerminateReason } from "./packages/plugin/src/modules/Sync.spec.js";
+import setNeedMigration from "./packages/plugin/src/components/MigrationModal.spec.js";
+import prefixWrapper from "./prefix.spec.js";
+import { pipe, readWithSize, writeWithValue } from "./packages/plugin/src/utils/pipe.spec.js";
+import { AugmentedModuleMeta, ModuleMeta } from "./packages/plugin/src/modules/Extensibility.spec.js";
+import { ExistingMemoryDB } from "./packages/plugin/src/modules/Bootstrap.spec.js";
+import { Context, Events, Settings, Translations } from "./packages/plugin/src/index.spec.js";
+import { CheckConnectionResult, ConflictResolverEntry, DeciderEntry, FsWrapperEntry, LocalRequestMiddlewareEntry, OptimizerEntry, RemoteFsEntry, RemoteLister, RemoteListerEntry, RemoteRequestMiddlewareEntry, Request, RequestParam, RequestResponse, SettingEntry } from "./packages/plugin/src/modules/Registrar.spec.js";
+import { VaultRequest } from "./packages/plugin/src/fs/vault/request.spec.js";
+import "./packages/plugin/src/fs/index.spec.js";
+//#region src/sdk/index.d.ts
+declare function digOriginal(wrapped: Fs): RootFs;
+type SelectFromContext<O extends object> = Context extends O ? O : never;
+//#endregion
+export { type AddRecord, type AugmentedModuleMeta, type BaseTask, type BatchOptimizer, type Binary, type CheckConnectionResult, type ConflictResolver, type ConflictResolverEntry, type ConflictResolverPayload, type Context, type CreateLocalDir, type CreateRemoteDir, type CustomAtom, type DatabaseAsync, type DatabaseSync, type Decider, type DeciderEntry, type DeciderInput, type DeleteAtom, type Dispatch, type Download, type Events, type ExistingMemoryDB, type FileStat, type FolderStat, type Fragment, type Fs, type FsWrapperEntry, type InputAtom, type ListReporter, type LocalRequestMiddlewareEntry, type MaybePromise, type MkdirAtom, type ModuleMeta, type MoveAtom, type MoveLocal, type MoveRemote, type ObsidianLanguageCode, type On, type OptimizerEntry, type OptimizerInput, type OptimizerOutput, type OutputAtom, type Progress, type RecordStat, type RecordStatsMap, type RecordStore, type RemoteFsEntry, type RemoteLister, type RemoteListerEntry, type RemoteRequestMiddlewareEntry, type RemoveLocal, type RemoveRecord, type RemoveRemote, type Request, type RequestParam, type RequestResponse, type ResolveConflict, type RootFs, SelectFromContext, type SettingEntry, type Settings, type Stat, type StatsMap, type StoreAsync, type StoreOperations, type StoreSync, type SyncTerminateReason, type TaskFactory, type TaskNames, type Translate, type TranslationResource, type Translations, type Upload, type VaultRequest, type WrappedFs, type WriteAtom, digOriginal, pipe, prefixWrapper, readWithSize, setNeedMigration, writeWithValue };

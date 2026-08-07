@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## Sync Engine v3.0.0 - 2026-08-07
+
+### Complete Rewrite from Ground Up
+
+- Completely rewritten the plugin with new modular architecture and extend support to all kinds of backends.
+- Renamed to **Sync Engine**.
+- The plugin now transitions from a plugin to a platform: it allows module extension without modifying the plugin source, and provides comprehensive documentation and API on developing a module.
+- Sync Engine also extends beyond WebDAV with the **S3-compatible backend support**, more backends like Google Drive and Dropbox will become as easy as writing a module.
+- Plugin performance is greatly improved, enhancements include faster startup, and [Anchored Asymmetric Storage](https://sync.consensia.cc/deep-dive/asymmetric-storage) that accelerates you every sync, [benchmarks show that Sync Engine is around 100x faster than Remotely Save in daily sync scenario](https://sync.consensia.cc/usage/benchmark).
+- Countless of stability improvements and bug fixes.
+
 ## Obsidian WebDAV Sync v2.5.13 - 2026-07-29
 
 - Fixed the bug that causes encrypted fast sync to fail and create duplicated files.

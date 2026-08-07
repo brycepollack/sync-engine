@@ -78,7 +78,7 @@ class ContextFs<S extends string, M extends string> implements WrappedFs {
 
 	async mkdir(key: string, recursive?: boolean) {
 		await this.original.mkdir(key, recursive);
-		upsertFolderStat(this.store, key);
+		if (key !== '/') upsertFolderStat(this.store, key);
 	}
 
 	async move(oldKey: string, newKey: string) {

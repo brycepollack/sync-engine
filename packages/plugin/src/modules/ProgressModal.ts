@@ -54,7 +54,6 @@ export default class ProgressModal extends Modal {
 			ctx.on('syncTerminated', () => {
 				this.renderDone();
 				if (!failedTasks.length) return;
-				failedTasks.length = 0;
 				if (!this.opening) {
 					this.open();
 					this.renderDone();
@@ -62,6 +61,7 @@ export default class ProgressModal extends Modal {
 				this.description?.setText(this.t('failedTasksDescription'));
 				renderFailedTasks(this.detailContainer as HTMLDivElement, failedTasks);
 				this.showDetails();
+				failedTasks.length = 0;
 			}),
 			ctx.on('requestConfirmDelete', (tasks) => {
 				let shouldClose = false;

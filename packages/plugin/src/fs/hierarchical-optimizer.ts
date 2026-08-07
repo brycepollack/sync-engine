@@ -1,4 +1,5 @@
 import { dirname, isSub } from '@repo/shared/path';
+import type { General } from '@/types';
 import type { DeleteAtom, InputAtom, MoveAtom, OptimizerInput } from './interface';
 
 type Paths = { read?: string; write?: string };

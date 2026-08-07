@@ -9,8 +9,8 @@ hero:
       text: Welcome!
       link: /usage/welcome
     - theme: alt
-      text: Develop a Module
-      link: /development/develop-a-module
+      text: Migrate from v2
+      link: /usage/migration
     - theme: alt
       text: View on GitHub →
       link: https://github.com/hesprs/sync-engine

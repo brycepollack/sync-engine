@@ -2,7 +2,7 @@
 
 **Sync Engine** is a sync plugin for Obsidian that you extend with modules — you install only the pieces you need, and your notes stay in sync across your devices. The Sync Engine core is reliable and highly optimized with months of human iteration and battle-testing.
 
-In practice, this means you pick a storage backend (your own WebDAV server, for example), optionally add encryption, and press "Sync". You don't configure features you won't use, and you don't carry code for services you'll never connect to. The sync remains fast and reliable, regardless of the backend you are using.
+In practice, this means you pick a storage backend (your own WebDAV server, for example), optionally add advanced features like encryption, and press "Sync". You don't configure features you won't use, and you don't carry code for services you'll never connect to. The sync remains fast and reliable, regardless of the backend you are using.
 
 **Real human maintainers are accountable for Sync Engine**. Although Sync Engine accepts AI-assisted module contribution. The Sync Engine core (the plugin) is strictly human-written and rejects any "vibe-coding". It consists of many ingenious engineering innovations that no AI can replicate.
 
@@ -42,7 +42,7 @@ Sync Engine core offers necessary features to ensure the extensibility and perfo
 - Incremental syncing never uploads the full vault each time.
 - [Anchored Asymmetric Storage](../deep-dive/asymmetric-storage) technology substantially accelerates syncing.
 - Real-time sync uses cached remote states, allowing it to complete within milliseconds.
-- **40 times** smaller size than Remotely Save, **20 times** faster startup time.
+- [Benchmarking shows around **100x** faster than Remotely Save in daily syncing](./benchmark).
 - Handles vaults with thousands of files smoothly.
 - Highly optimized core sync timing never wastes one millisecond.
 - Extensible optimizer slot ensures every request is optimized for your own service.

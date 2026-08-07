@@ -1,10 +1,10 @@
 {
 	"id": "sync-engine",
 	"name": "Sync Engine",
-	"version": "3.0.0-beta-21",
+	"version": "3.0.0",
 	"minAppVersion": "1.12.3",
 	"authorUrl": "https://hesprs.github.io",
-	"description": "The next-generation syncing plugin: Fast · Free · Extend with Modules.",
+	"description": "The next-generation syncing plugin: Fast · Free · Extend with Modules. Supports WebDAV and S3.",
 	"author": "Hēsperus",
 	"isDesktopOnly": false
 }

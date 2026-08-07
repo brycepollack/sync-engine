@@ -13,7 +13,7 @@ const sharedConfig = defineConfig({
 		onlyBundle: false,
 	},
 	minify: true,
-	outExtensions: () => ({ js: '.js' }),
+	outExtensions: () => ({ dts: '.spec.d.ts', js: '.js' }),
 });
 
 const pluginConfig = defineConfig({

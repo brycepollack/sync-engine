@@ -1,6 +1,5 @@
 // oxlint-disable no-console no-alert unicorn/require-module-specifiers
-const url = prompt('Enter website URL to HTTP ping: ');
-
+const url = (process.argv[2] ?? prompt('Enter website URL to HTTP ping: ')).trim();
 if (!url) {
 	console.error('No URL provided.');
 	process.exit(1);

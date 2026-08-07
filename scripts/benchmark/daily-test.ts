@@ -1,5 +1,11 @@
-import execute from './executor';
-import { append, create, del, move, waitForApproval, mkdir } from './operations';
+// oxlint-disable no-console no-alert
+import { $ } from 'bun';
+
+const vault = (process.argv[2] ?? prompt('Enter the Vault name to operate on: ')).trim();
+if (!vault) {
+	console.error('No vault provided.');
+	process.exit(1);
+}
 
 await execute([
 	// Case 1: capture a new daily note in an existing year folder.
@@ -36,7 +42,7 @@ await execute([
 	waitForApproval(),
 	[
 		move('small-0143.md', 'Daily Notes/2026/small-0143.md'),
-		move('small-0794.md', 'Archive/2025/Review/small-0794.md'),
+		move('small-0794.md', 'Archive/2024/Monthly/small-0794.md'),
 		move('Ideas', 'Inspirations'),
 		move('Reference/Current', 'Reference/Active'),
 	],
@@ -57,3 +63,46 @@ await execute([
 	waitForApproval(),
 	[append('medium-0065.md', 640), append('small-0808.md', 224), append('small-0248.md', 160)],
 ]);
+
+type MaybePromise<T> = Promise<T> | T;
+type Command =
+	| string
+	| { command: string; callback: (result: $.ShellPromise) => MaybePromise<void> };
+export type Commands = Array<Command | Array<Command>>;
+
+function handleCommand(command: Command) {
+	if (typeof command === 'string') return $`sh -c ${command}`;
+	const commandResult = $`sh -c ${command.command}`;
+	return Promise.all([commandResult, command.callback(commandResult)]);
+}
+
+async function execute(commands: Commands) {
+	for (const command of commands)
+		await (Array.isArray(command)
+			? Promise.all(command.map((subCommand) => handleCommand(subCommand)))
+			: handleCommand(command));
+}
+
+function create(key: string, size: number) {
+	return `obsidian vault="${vault}" create path="${key}" content="${'0'.repeat(size)}" overwrite`;
+}
+
+function mkdir(key: string) {
+	return `obsidian vault="${vault}" eval code="app.vault.adapter.mkdir('${key}')"`;
+}
+
+function append(key: string, size: number) {
+	return `obsidian vault="${vault}" append path="${key}" content="${'0'.repeat(size)}" inline`;
+}
+
+function del(key: string) {
+	return `obsidian vault="${vault}" eval code="app.vault.adapter.trashLocal('${key}')"`;
+}
+
+function move(oldKey: string, newKey: string) {
+	return `obsidian vault="${vault}" eval code="app.vault.adapter.rename('${oldKey}', '${newKey}')"`;
+}
+
+function waitForApproval() {
+	return 'read -r -p "Press Enter to continue..."';
+}

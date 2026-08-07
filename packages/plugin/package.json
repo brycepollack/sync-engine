@@ -18,7 +18,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/hesprs/obsidian-webdav-sync.git"
+		"url": "git+https://github.com/hesprs/sync-engine.git"
 	},
 	"files": [
 		"./dist"
@@ -26,14 +26,14 @@
 	"type": "module",
 	"sideEffects": false,
 	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+	"types": "./dist/index.spec.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
+			"types": "./dist/index.spec.d.ts",
 			"default": "./dist/index.js"
 		},
 		"./dev": {
-			"types": "./dist/dev.d.ts",
+			"types": "./dist/dev.spec.d.ts",
 			"default": "./dist/dev.js"
 		}
 	},

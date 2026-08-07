@@ -65,6 +65,7 @@ const localeConfig = configGenerator<ThemeConfig>((t) => {
 					items: [
 						{ link: `${usage}/welcome`, text: t('welcome') },
 						{ link: `${usage}/why-sync-engine`, text: t('whySyncEngine') },
+						{ link: `${usage}/migration`, text: t('migrateFromV2') },
 						{ link: `${usage}/benchmark`, text: t('benchmark') },
 						{
 							items: [

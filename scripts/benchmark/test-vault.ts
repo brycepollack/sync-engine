@@ -1,6 +1,12 @@
-// oxlint-disable import/no-nodejs-modules
+// oxlint-disable import/no-nodejs-modules no-alert no-console
 import { mkdir, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+
+const vault = (process.argv[2] ?? prompt('Enter the Vault name to operate on: ')).trim();
+if (!vault) {
+	console.error('No vault provided.');
+	process.exit(1);
+}
 
 const smallFileCount = 1880;
 const mediumFileCount = 100;
@@ -56,7 +62,7 @@ const files: Array<VaultFile> = [
 	})),
 ];
 
-const vaultProcess = Bun.spawn(['obsidian', 'vault', 'info=path']);
+const vaultProcess = Bun.spawn(['obsidian', `vault=${vault}`, 'vault', 'info=path']);
 const vaultPath = (await new Response(vaultProcess.stdout).text()).trim();
 if ((await vaultProcess.exited) !== 0 || vaultPath.length === 0)
 	throw new Error('Unable to obtain active Obsidian vault path');

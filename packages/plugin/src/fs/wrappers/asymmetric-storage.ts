@@ -23,20 +23,16 @@ function joinFileKey(parentKey: string, base: string) {
 	return parentKey === ROOT_KEY ? base : `${parentKey}${base}`;
 }
 
-function isDescendantOrSelf(key: string, parentKey: string) {
-	return isSub(parentKey, key, true);
-}
-
 function parseFlattenedKey(key: string): ParsedFlatKey | undefined {
 	if (key === ROOT_KEY || key.includes('/')) return undefined;
 	if (key.length > 6 && key[5] === '~') {
 		const base = key.slice(6);
-		if (!base) return undefined;
+		if (!base) return;
 		return { basename: base, isDir: false, parentAnchor: key.slice(0, 5) };
 	}
 	if (key.length > 11 && key[10] === '~') {
 		const base = key.slice(11);
-		if (!base) return undefined;
+		if (!base) return;
 		return {
 			anchor: key.slice(5, 10),
 			basename: base,
@@ -97,12 +93,10 @@ class AsymmetricStorageFs implements WrappedFs {
 			const oldAnchor = this.findAnchor(oldKey);
 			const flattenedNewKey = this.flattenFolderKey(newKey, oldAnchor);
 			const flattenedOldKey = this.flattenFolderKey(oldKey);
+			// Avoid deleting keyToAnchor since descendants still need
 			this.anchorToKey.delete(oldAnchor);
 			this.registerMapping(newKey, oldAnchor);
-			if (flattenedOldKey === flattenedNewKey) {
-				this.keyToAnchor.delete(oldKey);
-				return;
-			}
+			if (flattenedOldKey === flattenedNewKey) return;
 			try {
 				await this.original.move(flattenedOldKey, flattenedNewKey);
 			} catch (error) {
@@ -110,7 +104,6 @@ class AsymmetricStorageFs implements WrappedFs {
 				this.anchorToKey.set(oldAnchor, oldKey);
 				throw error;
 			}
-			this.keyToAnchor.delete(oldKey);
 		} else {
 			const flattenedNewKey = this.flattenFileKey(newKey);
 			const flattenedOldKey = this.flattenFileKey(oldKey);
@@ -121,8 +114,20 @@ class AsymmetricStorageFs implements WrappedFs {
 
 	async mkdir(key: string, recursive?: boolean) {
 		if (isRootKey(key)) return this.original.mkdir(key, recursive);
-		const anchor = this.generateAnchor(key);
-		this.registerMapping(key, anchor);
+		this.bootstrapMaps();
+		let anchor = this.keyToAnchor.get(key);
+		const created = !anchor;
+		if (!anchor) {
+			const parentAnchor = this.keyToAnchor.get(dirname(key));
+			if (!parentAnchor)
+				throw new Error(
+					"Parent anchor doesn't exist when generating child's. This is probably a bug of Sync Engine.",
+				);
+			let source = `${parentAnchor}~${basename(key)}`;
+			do anchor = generateId(source);
+			while (this.knownAnchors.has(anchor) && (source += '☭'));
+			this.registerMapping(key, anchor);
+		}
 		try {
 			const anchoredKey = this.flattenFolderKey(key, anchor);
 			await this.original.write(anchoredKey, EMPTY_BINARY, {
@@ -133,7 +138,7 @@ class AsymmetricStorageFs implements WrappedFs {
 				uid: crypto.randomUUID(),
 			});
 		} catch (error) {
-			this.deleteMapping(key, anchor);
+			if (created) this.deleteMapping(key, anchor);
 			throw error;
 		}
 	}
@@ -157,7 +162,7 @@ class AsymmetricStorageFs implements WrappedFs {
 				const inflated = this.inflateStat(stat);
 				if (
 					!inflated ||
-					!isDescendantOrSelf(inflated.key, key) ||
+					!isSub(key, inflated.key) ||
 					seen.has(inflated.key) ||
 					(await reporter({
 						completed: index + 1,
@@ -210,18 +215,6 @@ class AsymmetricStorageFs implements WrappedFs {
 		const existing = this.keyToAnchor.get(folderKey);
 		if (existing) return existing;
 		throw new Error('Cannot find existing anchor, this is probably a bug of Sync Engine.');
-	}
-
-	private generateAnchor(folderKey: string): string {
-		this.bootstrapMaps();
-		const parentAnchor = this.keyToAnchor.get(dirname(folderKey));
-		if (!parentAnchor)
-			throw new Error(
-				"Parent anchor doesn't exist when generating child's. This is probably a bug of Sync Engine.",
-			);
-		const anchor = generateAnchor(`${parentAnchor}~${basename(folderKey)}`, this.knownAnchors);
-		this.registerMapping(folderKey, anchor);
-		return anchor;
 	}
 
 	private bootstrapMaps() {
@@ -305,10 +298,4 @@ function generateId(str: string): string {
 	hash = Math.trunc(hash / 81);
 	const c0 = hash % 81;
 	return SAFE_81[c0] + SAFE_81[c1] + SAFE_81[c2] + SAFE_81[c3] + SAFE_81[c4];
-}
-function generateAnchor(source: string, existing: Set<string>) {
-	let anchor: string;
-	do anchor = generateId(source);
-	while (existing.has(anchor) && (source += '☭'));
-	return anchor;
 }

@@ -32,8 +32,8 @@ body:
     id: provider
     attributes:
       label: Backend
-      description: The service from which provider are you using?
-      placeholder: e.g., Nextcloud WebDAV
+      description: What type of backend and what service you are using?
+      placeholder: e.g. Nextcloud WebDAV, Amazon S3
     validations:
       required: true
 
@@ -54,7 +54,7 @@ body:
     id: logs
     attributes:
       label: Support Log
-      description: Please go to plugin settings - `Development settings` - `Support report`, click `Export to note`, copy and paste the content of the full log. This will be automatically formatted into code, so no need for backticks.
+      description: Please go to plugin settings - `Development` - `Export logs`, click `Export to note`, copy and paste the content of the full log. This will be automatically formatted into code, so no need for backticks.
       render: shell
       placeholder: If the support log contains information that you think is improper to disclose, only pasting lines with `ERROR` labels is OK.
 
@@ -74,5 +74,4 @@ body:
         - I have ensured that this issue only contains one bug.
         - I have checked historical bugs and there's no entry fitting this scenario.
         - I have confirmed that the issue doesn't contain any sensitive information.
-        - Issues caused by non-standard server configurations **will not be fixed**.
         - Issues where maintainers have requested clarification / coordinated testing but the reporter hasn't provide any further information will be closed after 72 hours.
