@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## Sync Engine v3.0.2 - 2026-08-07
+
+- Animate status bar icon when a sync is running.
+- Fixed plugin review false positives caused by incomplete type info and wrong dist folder.
+
 ## Sync Engine v3.0.1 - 2026-08-07
 
 - Fixed plugin review failure cause by outdated log file.

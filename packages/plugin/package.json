@@ -1,6 +1,6 @@
 {
 	"name": "@hesprs/sync-engine-sdk",
-	"version": "3.0.1",
+	"version": "3.0.2",
 	"description": "Official SDK for developing modules targeting Sync Engine, the extensible Obsidian syncing plugin.",
 	"keywords": [
 		"obsidian-plugin",
@@ -44,8 +44,8 @@
 	"scripts": {
 		"dev:plugin": "MODE=dev BUILD=plugin tsdown",
 		"build:plugin": "BUILD=plugin tsdown",
-		"dev": "MODE=dev tsdown",
-		"compile": "tsdown",
+		"dev": "MODE=dev PASS=dts tsdown && MODE=dev tsdown",
+		"compile": "PASS=dts tsdown && tsdown",
 		"fix": "oxlint --silent --fix && oxfmt",
 		"check": "tsc && oxlint && oxfmt --check",
 		"tests": "bun --preload=./test/mocks test"

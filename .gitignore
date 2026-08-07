@@ -6,7 +6,6 @@ test-files
 .obsidianignore
 Sync Engine Logs
 .vscode
-**/dist-plugin
 **/dist
 **/.turbo
 **/node_modules

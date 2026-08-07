@@ -106,17 +106,17 @@ export default class Observability {
 			progressText,
 			walkProgress,
 			executionProgress,
+			setupStatus,
 		} = this;
-		const { requestSync, dispatch, isIdle, addRibbonIcon, on, addStatusBarItem } = ctx;
+		const { requestSync, dispatch, isIdle, addRibbonIcon, on } = ctx;
 		let totalSyncTasks = 0;
 		let completedTasks = 0;
 		let updateInterval: number | undefined;
 		let noticeTimeout: number | undefined;
 		let mobileSyncNotice: Notice | undefined;
-		const statusEl = addStatusBarItem();
-		setIcon(statusEl, 'refresh-cw');
-		const status = statusEl.createSpan({ cls: 'ml-1', text: t('idle') });
+
 		setupCommands();
+		setupStatus();
 
 		cleanupCallbacks.push(
 			on('syncStarted', () => {
@@ -174,10 +174,7 @@ export default class Observability {
 				walkProgress({ completed: 0, total: 1 });
 				executionProgress({ completed: 0, total: 0 });
 			}),
-			progressText.subscribe((text) => {
-				status.setText(text);
-				mobileSyncNotice?.setMessage(text);
-			}),
+			progressText.subscribe((text) => mobileSyncNotice?.setMessage(text)),
 			() => {
 				window.clearInterval(updateInterval);
 				window.clearTimeout(noticeTimeout);
@@ -196,15 +193,35 @@ export default class Observability {
 					if (idle) {
 						startIcon.removeAttribute('aria-disabled');
 						svgIcon.removeClass('animate-spin');
-						stopIcon.classList.add('hidden');
+						stopIcon.addClass('hidden');
 					} else {
 						startIcon.setAttr('aria-disabled', 'true');
 						svgIcon.addClass('animate-spin');
-						stopIcon.classList.remove('hidden');
+						stopIcon.removeClass('hidden');
 					}
 				},
 				{ immediate: true },
 			),
+		);
+	};
+
+	private readonly setupStatus = () => {
+		const { ctx, t, progressText } = this;
+		const { isIdle, addStatusBarItem } = ctx;
+		const statusEl = addStatusBarItem();
+		setIcon(statusEl, 'refresh-cw');
+		const status = statusEl.createSpan({ cls: 'ml-1', text: t('idle') });
+		this.cleanupCallbacks.push(
+			isIdle.subscribe(
+				(idle) => {
+					const icon = statusEl.firstElementChild;
+					if (!icon) return;
+					if (idle) icon.removeClass('animate-spin');
+					else icon.addClass('animate-spin');
+				},
+				{ immediate: true },
+			),
+			progressText.subscribe((text) => status.setText(text)),
 		);
 	};
 

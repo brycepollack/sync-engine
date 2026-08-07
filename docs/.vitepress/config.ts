@@ -177,7 +177,7 @@ export default defineConfig<ThemeConfig>({
 	locales: {
 		root: localeConfig('en'),
 	},
-	markdown: { image: { lazyLoading: true } },
+	markdown: { image: { lazyLoad: true } },
 	outDir: p('dist'),
 	rewrites: { 'en/:rest*': ':rest*' },
 	sitemap: { hostname: 'https://sync.consensia.cc' },
