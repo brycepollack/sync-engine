@@ -29,6 +29,10 @@ Due to the revamped encryption schema, **WebDAV Sync encrypted files will be no 
 
 For seamless migration, **Sync Engine's most ingenious feature _Anchored Asymmetric Storage_ is disabled by default** if you are not using encryption (when encryption is enabled, this is left enabled since you will need to re-sync the entire vault anyway). You can enable that and use Sync Engine's built-in migration feature to transform your vault, then your every sync will be accelerated by this technology.
 
+### Version `2.5.14`
+
+Previous versions may have performance issue when encountering large vaults, which may lead to migration failure. This is a design defect and is patched in version `2.5.14`. If you find your migration failing in **step 5** with errors like `net::ERR_INSUFFICIENT_RESOURCES`, please [click here](https://github.com/hesprs/sync-engine/releases/download/2.5.14/main.js) to download the patched version, replace `<your vault>/.obsidian/plugins/webdav-sync/main.js`, and try migration again.
+
 ## Manual Migration
 
 If you need a more transparent migration process to see what is going on around your data. You can choose manual migration, go and perform all the following:

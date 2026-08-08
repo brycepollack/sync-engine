@@ -91,7 +91,7 @@ Sync Engine Monorepo
 
 **CI/CD**:
 
-The CI is run for every pull request commits, it runs `bun check`, `bun tests`, and `bun build`. If any of them fails, the pull request cannot merge.
+The CI is run for every pull request commits, it runs `bun check` and `bun tests`. If any of them fails, the pull request cannot merge.
 
 The core plugin release is triggered by any tag push. Tags containing hyphens trigger pre-release, tags with no hyphens trigger normal release. The release workflow captures corresponding description in `packages/plugin/CHANGELOG.md` as release detail.
 
@@ -105,7 +105,7 @@ You can open a pull request for debugging or new features. For bug-fix pull requ
 
 Commit message format: `<title>(<scope>): <message>`. Keep the message concise, avoid lengthy "files changed" or ASCII arts.
 
-It is recommended to document relevant implementation in `blueprint` directory is your contribution includes sophisticated algorithms or engineering pattern.
+It is required to document relevant implementation in `docs` directory if your contribution creates a new module, contains sophisticated implementations, or changes core SDK API.
 
 For maintainer convenience, the review messages will be in English. Same to issues, if a pull request failed review or CI and hasn't had any meaningful changes over 72 hours, the PR will be closed.
 
@@ -130,6 +130,8 @@ Then modify `modules.json` at the repo root to include your module:
 [
   {
     "name": "Module Name",
+    "id": "your-module",
+    "icon": "puzzle",
     "description": "Description for your module",
     "version": "0.0.1",
     "main": "https://sync.consensia.cc/modules/module-name.js"
@@ -150,7 +152,7 @@ Sync Engine repo generally accepts AI contribution, especially for modules, as l
 - Has code quality acceptable by maintainers
 - Can keep responsible to future maintenance
 
-The code can be written by AI, but when making pull requests, Sync Engine require the author must be the GitHub account of a real human. **Any names of AI agent entities are forbidden in co-author list, commit messages, and code.** This is because:
+The code can be written by AI, but when making pull requests, Sync Engine requires the author must be the GitHub account of a real human. **Any names of AI agent entities are forbidden in co-author list, commit messages, and code.** This is because:
 
 - Commits made by AI often signify insufficient development skill of the human to be capable for future maintenance.
 - Copyright of code in this repo belong to the corresponding authors and contributors, AI co-authoring creates ambiguities around code ownership.

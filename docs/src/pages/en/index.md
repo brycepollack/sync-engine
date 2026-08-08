@@ -19,7 +19,7 @@ features:
     title: Free and Open-Source
     details: Completely free, no extra payment, all code MIT licensed. Use your own services, your file controlled by yourself.
   - icon: ⚡
-    title: Lightening Fast
+    title: Lighting Fast
     details: Highly optimized sync routine never wastes one millisecond. Innovative technology powers the speed.
   - icon: 🧩
     title: Extensible
