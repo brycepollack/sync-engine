@@ -46,6 +46,12 @@
     </a>
 </p>
 
+## Migration
+
+If you previously used the plugin **WebDAV Sync** and is confused by the migration to Sync Engine. Sync Engine is the official successor after WebDAV Sync. You can read [this page](https://sync.consensia.cc/usage/migration) for the automatic migration or manual migration.
+
+If not all your devices have WebDAV Sync updated to 2.5.12 or later, you can go to [latest v2 release page](https://github.com/hesprs/sync-engine/releases/tag/2.5.14) and download the `main.js`, `styles.css`, and `manifest.json`, replace corresponding files in `<your vault>/.obsidian/plugins/webdav-sync/`. And then use the updated version to complete the migration.
+
 ## Introduction
 
 Sync Engine is a revolutionary solution for vault syncing. Its not only a syncing plugin, it is a modular platform that everyone can build upon.

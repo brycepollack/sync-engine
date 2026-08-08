@@ -35,14 +35,12 @@ Previous versions may have performance issue when encountering large vaults, whi
 
 ## Manual Migration
 
-If you need a more transparent migration process to see what is going on around your data. You can choose manual migration, go and perform all the following:
+If you need a more transparent migration process to see what is going on around your data. You can choose manual migration, you need to perform all the following:
 
-1. Disable WLAN or mobile network temporarily to prevent WebDAV Sync performing accidental syncs.
-2. Go into Obsidian, delete WebDAV Sync plugin.
-3. Go to your WebDAV backend and delete the remote root directory.
-4. Enable network connection, and install Sync Engine from Obsidian plugin store.
-5. Install necessary modules and configure your account in Sync Engine.
-6. Perform a fresh sync on one of your devices to upload your files, and delete all files on your other devices. **Please ensure the uploader device contains all the files you want to preserve**.
-7. Perform sync on all other devices to download the files just uploaded.
-
-Then the manual migration is done. This method refreshes WebDAV files completely. And "Anchored Asymmetric Storage" is enabled by default.
+1. Go into Obsidian, use WebDAV Sync to sync all your devices to ensure they have aligned copies of your data. If it shows the migration prompt, choose "cancel" directly.
+2. Disable and delete WebDAV Sync on every devices.
+3. Install Sync Engine from Obsidian plugin store.
+4. Install the `WebDAV` module from the module management panel in Sync Engine settings, configure your account on every devices.
+5. If you previously **enabled encryption**, please download the Encryption module and configure the encryption password. The manually delete the remote base directory on your WebDAV management UI. Choose one of your devices with better internet connection to sync your encrypted full vault to the remote.
+6. If you are not using encryption previously, **go to Sync Engine settings and disable "Asymmetric storage", you do not need to delete any data anywhere.**
+7. Perform sync on all other devices, Sync Engine should scan the remote folder and picks up the aligned state, populates its internal records only and shows "Already synced".
