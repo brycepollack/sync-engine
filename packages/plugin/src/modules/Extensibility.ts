@@ -4,6 +4,7 @@ import type { Ref } from 'synthkernel';
 import type { StoreOperations } from 'uni-kv';
 import loadModule from '$/e2e-utils';
 import hash from '@repo/shared/crypto';
+import { encodeURIComponent3986 } from '@repo/shared/path';
 import obsidian, { Notice, requestUrl } from 'obsidian';
 import { compare } from 'verkit';
 import type { DatabaseAsync, StoreAsync } from '@/sdk';
@@ -451,7 +452,7 @@ async function migrateModules({
 					icon: 'puzzle',
 					id,
 					integrity: await sha256(file),
-					main: `https://sync.consensia.cc/modules/${encodeURIComponent(name)}.js`,
+					main: `https://sync.consensia.cc/modules/${encodeURIComponent3986(name)}.js`,
 					name,
 					source: 'https://sync.consensia.cc/modules.json',
 					version,

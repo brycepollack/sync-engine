@@ -4,7 +4,6 @@ const ru: Translations = {
 	add: 'Добавить',
 	addRecord: 'Добавить запись',
 	addSecretHeader: 'Добавить секретный заголовок',
-	allRecordsCleared: 'Все записи очищены',
 	asymmetricStorage: 'Асимметричное хранилище',
 	asymmetricStorageDescription: (frag) => {
 		frag.appendText('Используйте ');
@@ -59,11 +58,10 @@ const ru: Translations = {
 	checkConnection: 'Проверить соединение',
 	checkConnectionFailed: 'Ошибка проверки соединения',
 	checkConnectionSuccess: 'Соединение успешно проверено',
-	clearAllRecords: 'Очистить все записи',
+	clear: 'Очистить',
 	clearRecords: 'Очистить записи',
 	clearRecordsDescription:
 		'Sync Engine записывает состояния синхронизации для разрешения операций между локальными и удалёнными файлами. Эта опция позволяет выборочно очищать записи. Внимание: это действие может привести к потере данных.',
-	clearVaultRecords: 'Очистить записи хранилища',
 	completed: 'Завершено',
 	completedNoop: 'Уже синхронизировано',
 	configurations: 'Конфигурации',
@@ -74,7 +72,19 @@ const ru: Translations = {
 	confirmDeleteInAutoSync: 'Подтверждать удаления при автосинхронизации',
 	confirmDeleteInAutoSyncDescription:
 		'Показывать подтверждение для локальных файлов, которые будут удалены во время автоматической синхронизации. Вы сможете выбрать: удалить их или загрузить повторно.',
-	confirmTasksDescription: 'Пожалуйста, подтвердите операции ниже.',
+	confirmTasksDescription: (frag) => {
+		frag.appendText('Пожалуйста, подтвердите операции ниже: ');
+		frag.createSpan({ cls: 'color-[--color-green] font-bold', text: 'зелёный' });
+		frag.appendText(' значок означает локальную операцию; ');
+		frag.createSpan({ cls: 'color-[--color-blue] font-bold', text: 'синий' });
+		frag.appendText(' — удалённую операцию; ');
+		frag.createSpan({ cls: 'color-[--color-red] font-bold', text: 'красный' });
+		frag.appendText(' — локальное удаление; ');
+		frag.createSpan({ cls: 'color-[--color-pink] font-bold', text: 'розовый' });
+		frag.appendText(' — удалённое удаление; а ');
+		frag.createSpan({ cls: 'color-[--color-yellow] font-bold', text: 'жёлтый' });
+		frag.appendText(' — разрешение конфликта.');
+	},
 	confirmTasksInSync: 'Подтверждать операции при ручной синхронизации',
 	confirmTasksInSyncDescription:
 		'Показывать ожидающие операции и выполнять их только после подтверждения (не влияет на автосинхронизацию).',
@@ -207,6 +217,7 @@ const ru: Translations = {
 	realtimeSyncFastModeDescription:
 		'Использовать кэшированные данные и избегать лишней проверки удалённых файлов во время синхронизации в реальном времени для ускорения процесса.',
 	realtimeSyncPlaceholder: 'Введите задержку (например, 500ms, 5s)',
+	recordsCleared: 'Записи очищены',
 	remoteMigration: 'Миграция удалённого хранилища',
 	remove: 'Удалить',
 	removeLocal: 'Удалить локальный файл',
@@ -285,7 +296,6 @@ const ru: Translations = {
 		'Укажите источник, из которого этот модуль будет получать обновления. Оставьте поле пустым, чтобы отключить обновления.',
 	updateSourcePlaceholder: 'https://example.com/modules.json',
 	upload: 'Загрузить',
-	vaultRecordsCleared: 'Записи хранилища очищены',
 	walkingRemote: 'Сканирование удалённых файлов',
 };
 

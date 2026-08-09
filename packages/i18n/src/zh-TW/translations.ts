@@ -4,7 +4,6 @@ const zhTW: Translations = {
 	add: '新增',
 	addRecord: '新增紀錄',
 	addSecretHeader: '新增加密標頭',
-	allRecordsCleared: '已清除所有紀錄',
 	asymmetricStorage: '非對稱儲存',
 	asymmetricStorageDescription: (frag) => {
 		frag.appendText('使用');
@@ -59,11 +58,10 @@ const zhTW: Translations = {
 	checkConnection: '測試連線',
 	checkConnectionFailed: '連線測試失敗',
 	checkConnectionSuccess: '連線測試成功',
-	clearAllRecords: '清除所有紀錄',
+	clear: '清除',
 	clearRecords: '清除紀錄',
 	clearRecordsDescription:
 		'Sync Engine 會記錄同步狀態以處理本地與遠端檔案之間的變更。此選項允許您選擇性地清除紀錄。警告：此操作可能會導致資料遺失。',
-	clearVaultRecords: '清除儲存庫紀錄',
 	completed: '已完成',
 	completedNoop: '已是最新狀態',
 	configurations: '設定項目',
@@ -73,7 +71,19 @@ const zhTW: Translations = {
 	confirmDeleteInAutoSync: '自動同步時確認刪除',
 	confirmDeleteInAutoSyncDescription:
 		'在自動同步過程中刪除本地檔案前顯示確認視窗。您可以選擇刪除或重新上傳。',
-	confirmTasksDescription: '請確認以下操作。',
+	confirmTasksDescription: (frag) => {
+		frag.appendText('請確認以下操作：');
+		frag.createSpan({ cls: 'color-[--color-green] font-bold', text: '綠色' });
+		frag.appendText('圖示代表本地操作；');
+		frag.createSpan({ cls: 'color-[--color-blue] font-bold', text: '藍色' });
+		frag.appendText('代表遠端操作；');
+		frag.createSpan({ cls: 'color-[--color-red] font-bold', text: '紅色' });
+		frag.appendText('代表本地刪除；');
+		frag.createSpan({ cls: 'color-[--color-pink] font-bold', text: '粉紅色' });
+		frag.appendText('代表遠端刪除；而');
+		frag.createSpan({ cls: 'color-[--color-yellow] font-bold', text: '黃色' });
+		frag.appendText('則代表衝突解決。');
+	},
 	confirmTasksInSync: '手動同步時確認操作',
 	confirmTasksInSyncDescription: '顯示待處理的操作，並在您確認後執行（不影響自動同步）。',
 	conflictResolveStrategy: '衝突解決策略',
@@ -200,6 +210,7 @@ const zhTW: Translations = {
 	realtimeSyncFastModeDescription:
 		'在即時同步過程中重複使用快取資料並跳過不必要的遠端掃描，以加快同步速度。',
 	realtimeSyncPlaceholder: '輸入同步延遲（例如 500ms, 5s）',
+	recordsCleared: '紀錄已清除',
 	remoteMigration: '遠端遷移',
 	remove: '移除',
 	removeLocal: '移除本地',
@@ -272,7 +283,6 @@ const zhTW: Translations = {
 	updateSourceDescription: '設定此模組接收更新的模組來源。留空則停用更新。',
 	updateSourcePlaceholder: 'https://example.com/modules.json',
 	upload: '上傳',
-	vaultRecordsCleared: '已清除儲存庫紀錄',
 	walkingRemote: '正在掃描遠端檔案',
 };
 

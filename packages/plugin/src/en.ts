@@ -4,7 +4,6 @@ const en: Translations = {
 	add: 'Add',
 	addRecord: 'Add record',
 	addSecretHeader: 'Add secret header',
-	allRecordsCleared: 'All records cleared',
 	asymmetricStorage: 'Asymmetric storage',
 	asymmetricStorageDescription: (frag) => {
 		frag.appendText('Use ');
@@ -59,11 +58,10 @@ const en: Translations = {
 	checkConnection: 'Check connection',
 	checkConnectionFailed: 'Check connection failed',
 	checkConnectionSuccess: 'Check connection succeeded',
-	clearAllRecords: 'Clear all records',
+	clear: 'Clear',
 	clearRecords: 'Clear records',
 	clearRecordsDescription:
-		'Sync Engine records sync states to resolve sync operations between local and remote files. This option allows you to selectively clear records. Warning: this action is likely to cause data loss.',
-	clearVaultRecords: 'Clear vault records',
+		'Sync Engine records sync states to resolve sync operations between local and remote files. This option allows you to clear records. Warning: this action is likely to cause changes in sync decisions.',
 	completed: 'Completed',
 	completedNoop: 'Already synced',
 	configurations: 'Configurations',
@@ -74,7 +72,19 @@ const en: Translations = {
 	confirmDeleteInAutoSync: 'Confirm deletions during auto-sync',
 	confirmDeleteInAutoSyncDescription:
 		'Show a confirmation of local files that will be deleted during auto-triggered syncs. You can choose to delete or re-upload them.',
-	confirmTasksDescription: 'Please confirm the operations below.',
+	confirmTasksDescription: (frag) => {
+		frag.appendText('Please confirm the operations below: a ');
+		frag.createSpan({ cls: 'color-[--color-green] font-bold', text: 'green' });
+		frag.appendText(' icon means local operation; ');
+		frag.createSpan({ cls: 'color-[--color-blue] font-bold', text: 'blue' });
+		frag.appendText(' means remote operation; ');
+		frag.createSpan({ cls: 'color-[--color-red] font-bold', text: 'red' });
+		frag.appendText(' means local deletion; ');
+		frag.createSpan({ cls: 'color-[--color-pink] font-bold', text: 'pink' });
+		frag.appendText(' means remote deletion; and ');
+		frag.createSpan({ cls: 'color-[--color-yellow] font-bold', text: 'yellow' });
+		frag.appendText(' means conflict resolution.');
+	},
 	confirmTasksInSync: 'Confirm operations in manual sync',
 	confirmTasksInSyncDescription:
 		'Show pending operations and execute after confirmation (does not affect auto-sync).',
@@ -207,6 +217,7 @@ const en: Translations = {
 	realtimeSyncFastModeDescription:
 		'Reuse cached data and avoid unnecessary remote discovery during real-time sync to accelerate sync.',
 	realtimeSyncPlaceholder: 'Enter sync delay (e.g. 500ms, 5s)',
+	recordsCleared: 'Records cleared',
 	remoteMigration: 'Remote migration',
 	remove: 'Remove',
 	removeLocal: 'Remove local',
@@ -282,7 +293,6 @@ const en: Translations = {
 		'Set the module source from which this module receives updates. Leave empty to disable update.',
 	updateSourcePlaceholder: 'https://example.com/modules.json',
 	upload: 'Upload',
-	vaultRecordsCleared: 'Vault records cleared',
 	walkingRemote: 'Discovering remote files',
 };
 

@@ -4,7 +4,6 @@ const zh: Translations = {
 	add: '添加',
 	addRecord: '添加记录',
 	addSecretHeader: '添加机密请求头',
-	allRecordsCleared: '所有记录已清除',
 	asymmetricStorage: '非对称存储',
 	asymmetricStorageDescription: (frag) => {
 		frag.appendText('使用 ');
@@ -47,11 +46,10 @@ const zh: Translations = {
 	checkConnection: '测试连接',
 	checkConnectionFailed: '测试连接失败',
 	checkConnectionSuccess: '测试连接成功',
-	clearAllRecords: '清除所有记录',
+	clear: '清除',
 	clearRecords: '清除记录',
 	clearRecordsDescription:
 		'Sync Engine 会记录同步状态，以便在本地和远程文件之间解析同步操作。此选项允许您选择性地清除记录。警告：此操作很可能会导致数据丢失。',
-	clearVaultRecords: '清除库记录',
 	completed: '已完成',
 	completedNoop: '已是最新状态',
 	configurations: '配置',
@@ -61,7 +59,19 @@ const zh: Translations = {
 	confirmDeleteInAutoSync: '自动同步时确认删除',
 	confirmDeleteInAutoSyncDescription:
 		'在自动触发的同步过程中，显示将被删除的本地文件的确认提示。您可以选择删除或重新上传它们。',
-	confirmTasksDescription: '请确认以下操作。',
+	confirmTasksDescription: (frag) => {
+		frag.appendText('请确认以下操作：');
+		frag.createSpan({ cls: 'color-[--color-green] font-bold', text: '绿色' });
+		frag.appendText(' 图标表示本地操作；');
+		frag.createSpan({ cls: 'color-[--color-blue] font-bold', text: '蓝色' });
+		frag.appendText(' 表示远程操作；');
+		frag.createSpan({ cls: 'color-[--color-red] font-bold', text: '红色' });
+		frag.appendText(' 表示本地删除；');
+		frag.createSpan({ cls: 'color-[--color-pink] font-bold', text: '粉色' });
+		frag.appendText(' 表示远程删除；');
+		frag.createSpan({ cls: 'color-[--color-yellow] font-bold', text: '黄色' });
+		frag.appendText(' 则表示冲突解决。');
+	},
 	confirmTasksInSync: '手动同步时确认操作',
 	confirmTasksInSyncDescription: '显示待处理的操作并在确认后执行（不影响自动同步）。',
 	conflictResolveStrategy: '冲突解决策略',
@@ -188,6 +198,7 @@ const zh: Translations = {
 	realtimeSyncFastModeDescription:
 		'在实时同步过程中复用缓存数据并避免不必要的远程探测，以加速同步。',
 	realtimeSyncPlaceholder: '输入同步延迟（例如 500ms, 5s）',
+	recordsCleared: '记录已清除',
 	remoteMigration: '远程迁移',
 	remove: '移除',
 	removeLocal: '移除本地',
@@ -259,7 +270,6 @@ const zh: Translations = {
 	updateSourceDescription: '设置此模块接收更新的模块源。留空以禁用更新。',
 	updateSourcePlaceholder: 'https://example.com/modules.json',
 	upload: '上传',
-	vaultRecordsCleared: '库记录已清除',
 	walkingRemote: '正在探测远程文件',
 };
 
