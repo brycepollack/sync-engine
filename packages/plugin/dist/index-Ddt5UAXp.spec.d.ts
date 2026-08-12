@@ -545,6 +545,7 @@ declare class Observability {
   private readonly progressText;
   readonly settings: {
     noticeStatusOnMobile: boolean;
+    exportLogsDirectory: string;
   };
   readonly i18n: {
     startSync: string;
@@ -802,6 +803,7 @@ type DevelopmentSettingTranslations = {
   clearRecordsDescription: string;
   export: string;
   exportLogsDescription: string;
+  exportLogsDirectoryPlaceholder: string;
   exportLogsToFile: string;
 };
 //#endregion
@@ -948,20 +950,18 @@ declare class Bootstrap {
 //#region src/components/module-management/index.d.ts
 type ModuleManagementTranslations = {
   disableModule: string;
-  disabled: string;
   downloadModule: string;
   enableModule: string;
-  enabled: string;
   installed: string;
   loadingModules: string;
   noInstalledModulesFound: string;
   noMatchingModulesFound: string;
   noModulesAvailable: string;
-  notInstalled: string;
   updateAvailable: string;
   updateModule: string;
   deleteModule: string;
   editModuleInformation: string;
+  official: string;
 };
 //#endregion
 //#region src/components/SourceEditorModal.d.ts
